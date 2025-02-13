@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.alert.mapper.WorkbenchNoticeSendRecordMapper">
+
+
+    <insert id="insertBatch" parameterType="list">
+        insert into workbench_notice_send_record (id, batch_id, user_id,
+        user_name, mobile_phone_no, email,
+        send_type, send_time, status, remarks, notice)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id,jdbcType=VARCHAR}, #{item.batchId,jdbcType=VARCHAR}, #{item.userId,jdbcType=VARCHAR},
+            #{item.userName,jdbcType=VARCHAR}, #{item.mobilePhoneNo,jdbcType=BIGINT}, #{item.email,jdbcType=VARCHAR},
+            #{item.sendType,jdbcType=VARCHAR}, now(), '0',
+            #{item.remarks,jdbcType=VARCHAR}, #{item.notice,jdbcType=LONGVARCHAR})
+        </foreach>
+    </insert>
+
+    <update id="updateBatch" parameterType="list">
+        <foreach collection="list" item="item" separator=";">
+            update workbench_notice_send_record
+            set
+            status = '3',
+            remarks = #{item.errorMsg,jdbcType=VARCHAR}
+            where id = #{item.recordId,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <select id="selectNotUpdatedRecord" resultType="java.lang.String">
+        select id
+        from workbench_notice_send_record
+        where status = '0' AND NOW() &lt;= DATE_ADD(send_time,INTERVAL ${timeout} HOUR)
+    </select>
+
+    <update id="updateSendStatus" parameterType="list">
+        <foreach collection="list" item="item"  separator=";" >
+            update workbench_notice_send_record
+            <set>
+                wechat_status=#{item.wechatStatus,jdbcType=CHAR},
+                phone_status=#{item.phoneStatus,jdbcType=CHAR},
+                email_status=#{item.emailStatus,jdbcType=CHAR},
+                voice_status=#{item.voiceStatus,jdbcType=CHAR},
+                status=#{item.status,jdbcType=CHAR},
+                update_time=#{item.updateTime,jdbcType=TIMESTAMP}
+            </set>
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+</mapper>

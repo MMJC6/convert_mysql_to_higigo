@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.vuln.mapper.VulnScreeningListMapper" >
+
+    <select id="getScreeningByVulnBusiness" parameterType="com.starso.system.api.domain.TbVulnBusiness" resultType="com.starso.job.modules.vuln.domain.VulnScreeningList">
+        select vsl.id, vsl.vuln_id, vsl.vuln_resource_id, vsl.vuln_source, vsl.vuln_category, vsl.vuln_type, vsl.assets_id, vsl.assets_ip, vsl.title, vsl.vuln_url, vsl.domain, vsl.level, vsl.status, vsl.screening_type, vsl.create_id, vsl.create_time, vsl.update_id, vsl.update_time, vsl.report_prove
+        from vuln_screening_list vsl
+        where vsl.status = '1'
+          AND NOT EXISTS(
+            SELECT '' FROM vuln_business WHERE vsl.vuln_category = type AND vsl.vuln_type = title AND addr = vsl.vuln_url
+            )
+    </select>
+    <select id="getScreeningByVulnResource" parameterType="com.starso.system.api.domain.TbVulnResourceIpAssets" resultType="com.starso.job.modules.vuln.domain.VulnScreeningList">
+        select vsl.id, vsl.vuln_id, vsl.vuln_resource_id, vsl.vuln_source, vsl.vuln_category, vsl.vuln_type, vsl.assets_id, vsl.assets_ip, vsl.title, vsl.vuln_url, vsl.domain, vsl.level, vsl.status, vsl.screening_type, vsl.create_id, vsl.create_time, vsl.update_id, vsl.update_time, vsl.report_prove
+        from vuln_screening_list vsl
+        where vsl.status = '1' and (vsl.screening_type = '2' or vsl.screening_type = '3')
+          and NOT EXISTS (
+                SELECT 1 from vuln_resource_ip_assets va where vsl.vuln_source = '3' and va.id = vsl.vuln_id and vsl.assets_ip = va.vuln_ip
+            )
+    </select>
+</mapper>

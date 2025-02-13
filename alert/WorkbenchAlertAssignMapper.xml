@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.alert.mapper.WorkbenchAlertAssignMapper">
+
+    <resultMap id="BaseResultMap" type="com.starso.job.modules.alert.domain.WorkbenchAlertAssign">
+        <id column="id" jdbcType="VARCHAR" property="id" />
+        <result column="alert_id" jdbcType="VARCHAR" property="alertId" />
+        <result column="assign_time" jdbcType="TIMESTAMP" property="assignTime" />
+        <result column="status" jdbcType="CHAR" property="status" />
+    </resultMap>
+
+    <insert id="insert" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertAssign">
+        insert into workbench_alert_assign (id, alert_id, assign_time,status)
+        values (#{id,jdbcType=VARCHAR}, #{alertId,jdbcType=VARCHAR}, now(), '1')
+    </insert>
+
+</mapper>

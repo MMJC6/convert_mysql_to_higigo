@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.screen.mapper.SossSendDataValueMapper" >
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.screen.domain.SossSendDataValue" >
+    <result column="customer_no" property="customerNo" jdbcType="VARCHAR" />
+    <result column="param_type" property="paramType" jdbcType="VARCHAR" />
+    <result column="data_type" property="dataType" jdbcType="VARCHAR" />
+    <result column="param_value" property="paramValue" jdbcType="VARCHAR" />
+    <result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    customer_no,param_type,data_type,param_value,update_time
+  </sql>
+  
+
+  
+  <delete id="deleteAll">
+    delete from soss_send_data_value;
+  </delete>
+
+  <insert id="insertBatch" parameterType="list" >
+    insert into soss_send_data_value (customer_no,param_type,data_type,param_value,update_time)
+    values
+    <foreach collection="list" item="item"  separator="," >
+      (#{item.customerNo,jdbcType=VARCHAR}, #{item.paramType,jdbcType=VARCHAR}, #{item.dataType,jdbcType=VARCHAR}, #{item.paramValue,jdbcType=VARCHAR},
+      #{item.updateTime,jdbcType=TIMESTAMP})
+    </foreach>
+  </insert>
+
+  <update id="callSendData" statementType="CALLABLE">
+      {
+        CALL screen_data_update_per_one_day();
+        CALL screen_data_update_per_three();
+        CALL screen_data_update_per_five();
+        CALL screen_data_update();
+      }
+  </update>
+
+  <select id="selectScreenDataShuLiang" parameterType="String" resultType="String">
+    select param_value FROM screen_data WHERE param_type = #{type,jdbcType=VARCHAR}
+  </select>
+
+  <select id="selectCountByDevType" parameterType="java.lang.String" resultType="java.lang.Integer">
+    select count(1) from s_monitor_resources where enable = '1'
+    AND devtype IN ( 'fw', 'waf', 'ids', 'ips','other','mg' )
+    <if test="type =='fw'">
+      and devtype ='fw'
+    </if>
+
+    <if test="type =='ids'">
+      and devtype = 'ids'
+    </if>
+
+    <if test="type =='nta'">
+      and devtype = 'nta'
+    </if>
+
+    <if test="type =='waf/ips'">
+      and devtype in ('waf','ips')
+    </if>
+
+    <if test="type =='mg'">
+      and devtype = 'mg'
+    </if>
+
+    <if test="type =='other'">
+      and devtype ='other'
+    </if>
+  </select>
+
+  <select id="selectExceptCountByDevType" parameterType="java.lang.String" resultType="java.lang.Integer">
+    SELECT
+        count(DISTINCT sr.id)
+    FROM
+        s_monitor_resources sr
+    INNER JOIN s_monitor_status st  on sr.shortname=st.shortname
+    WHERE sr.`enable` = '1' and sr.devtype in('fw', 'waf', 'ids', 'ips','other','mg')
+    and EXISTS(
+      SELECT * from (
+        SELECT
+            ms.shortname, MAX( ms.time ) time
+        FROM
+            s_monitor_status ms
+        GROUP BY
+            ms.shortname
+      )	a
+      where a.time=st.time and st.`status` !='0' and a.shortname=sr.shortname
+    )
+    <if test="type =='fw'">
+      and sr.devtype ='fw'
+    </if>
+
+    <if test="type =='ids'">
+      and sr.devtype = 'ids'
+    </if>
+
+    <if test="type =='nta'">
+      and sr.devtype = 'nta'
+    </if>
+
+    <if test="type =='waf/ips'">
+      and sr.devtype in ('waf','ips')
+    </if>
+
+    <if test="type =='mg'">
+      and sr.devtype = 'mg'
+    </if>
+
+    <if test="type =='other'">
+      and sr.devtype ='other'
+    </if>
+  </select>
+
+  <select id="selectSeimLogAmount" parameterType="java.lang.Long" resultType="com.starso.system.api.domain.SeimLogsData">
+    select id,amount from seim_logs_amount where FROM_UNIXTIME(id/1000,'%Y%m%d%H') = FROM_UNIXTIME(#{currentTime,jdbcType=BIGINT}/1000,'%Y%m%d%H')
+  </select>
+
+</mapper>

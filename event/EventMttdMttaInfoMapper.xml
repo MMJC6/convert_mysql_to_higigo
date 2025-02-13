@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.event.mapper.EventMttdMttaInfoMapper" >
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.event.domain.EventMttdMttaInfo" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="num" property="num" jdbcType="VARCHAR" />
+    <result column="alert_time" property="alertTime" jdbcType="TIMESTAMP" />
+    <result column="submit_time" property="submitTime" jdbcType="TIMESTAMP" />
+    <result column="work_begin_time" property="workBeginTime" jdbcType="VARCHAR" />
+    <result column="work_end_time" property="workEndTime" jdbcType="VARCHAR" />
+    <result column="mttd" property="mttd" jdbcType="DOUBLE" />
+    <result column="mtta" property="mtta" jdbcType="DOUBLE" />
+    <result column="screening_time" property="screeningTime" jdbcType="TIMESTAMP" />
+    <result column="spareTime" property="spareTime" jdbcType="TIMESTAMP" />
+    <result column="type" property="type" jdbcType="VARCHAR" />
+  </resultMap>
+  <resultMap id="BaseResultSspMap" type="com.starso.job.modules.event.domain.EventMttdMttaInfo" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="num" property="num" jdbcType="VARCHAR" />
+    <result column="alert_time" property="alertTime" jdbcType="TIMESTAMP" />
+    <result column="submit_time" property="submitTime" jdbcType="TIMESTAMP" />
+    <result column="work_begin_time" property="workBeginTime" jdbcType="VARCHAR" />
+    <result column="work_end_time" property="workEndTime" jdbcType="VARCHAR" />
+    <result column="mttd" property="mttd" jdbcType="DOUBLE" />
+    <result column="mtta" property="mtta" jdbcType="DOUBLE" />
+    <result column="screening_time" property="screeningTime" jdbcType="TIMESTAMP" />
+    <result column="spareTime" property="spareTime" jdbcType="TIMESTAMP" />
+    <result column="type" property="type" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, num, alert_time, submit_time, work_begin_time, work_end_time, mttd, mtta, screening_time, 
+    type
+  </sql>
+  
+  <sql id="Base_Column_Ssp_List" >
+    s.id, s.num, s.alert_time, s.submit_time, s.work_begin_time, s.work_end_time, s.mttd, s.mtta, s.screening_time, 
+    s.type
+  </sql>
+
+  <select id="selectSspEventMttdMttaInfo" resultMap="BaseResultSspMap" parameterType="com.starso.job.modules.event.domain.EventMttdMttaInfo" >
+    select
+    <include refid="Base_Column_Ssp_List" />
+    from event_mttd_mtta_info s
+    <if test="screeningTime != null">
+      where s.screening_time <![CDATA[>=]]> #{screeningTime,jdbcType=TIMESTAMP}
+    </if>
+  </select>
+
+  <!-- 开始时间更改为分配时间 -->
+  <select id="selectMttdEvent" parameterType="com.starso.job.modules.event.domain.EventMttdMttaInfo" resultMap="BaseResultMap">
+      SELECT * FROM (
+                    SELECT CONCAT(YEAR(e.create_time),'-',e.event_no) num, u.assign_time alert_time,MIN(et.first_submit_time) submit_time
+                    FROM `event` e
+                           INNER JOIN event_alerts a ON e.id = a.event_id AND a.`status` = '1' AND a.is_alert = '0'
+                           INNER JOIN workbench_alert_info i ON a.alert_id = i.id AND (i.`status` = '4' OR i.`status` = '7')
+                           INNER JOIN workbench_alert_user u on e.create_by = u.user_id and a.alert_id = u.alert_id and u.`status` ='4'
+			        INNER JOIN event_task et ON e.id = et.event_id AND et.`status` = '1'
+                    GROUP BY e.id) t
+      WHERE t.submit_time <![CDATA[>=]]> #{beginTime} AND t.submit_time <![CDATA[<=]]> #{endTime}
+      AND NOT EXISTS(
+            SELECT '' FROM event_mttd_mtta_info ei WHERE ei.num = t.num AND ei.type = '0'
+      )
+  </select>
+
+  <insert id="insertBatch" parameterType="java.util.List">
+    insert into event_mttd_mtta_info (id, num, alert_time,
+    submit_time, work_begin_time, work_end_time,
+    mttd, mtta, screening_time,
+    type)
+    values
+    <foreach collection="list" item="item" separator=",">
+      (MD5(UUID()), #{item.num,jdbcType=VARCHAR}, #{item.alertTime,jdbcType=TIMESTAMP},
+      #{item.submitTime,jdbcType=TIMESTAMP}, #{item.workBeginTime,jdbcType=VARCHAR}, #{item.workEndTime,jdbcType=VARCHAR},
+      #{item.mttd,jdbcType=DOUBLE}, #{item.mtta,jdbcType=DOUBLE}, #{item.screeningTime,jdbcType=TIMESTAMP},
+      #{item.type,jdbcType=VARCHAR})
+    </foreach>
+  </insert>
+
+  <select id="selectMttaEvent" resultType="com.starso.job.modules.event.domain.EventMttdMttaInfo">
+    SELECT s.* FROM (
+          SELECT CONCAT(YEAR(e.create_time),'-',e.event_no) num,
+                 CASE WHEN MAX(a.audit_time) IS NULL THEN MIN(t.first_submit_time)
+                      WHEN MAX(a.audit_time)>MIN(t.first_submit_time)
+                          THEN MIN(t.first_submit_time)
+                      ELSE MAX(a.audit_time)
+                     END  alert_time,
+                 count(DISTINCT et.id) monCount,count(DISTINCT a.event_task_id) monEndCount,MIN(t.first_submit_time) spareTime,
+                 MAX(t.first_submit_time) submit_time, COUNT(t.id) templateTaskCount, COUNT(t.first_submit_time) templateTaskEndCount
+          FROM `event` e
+                 LEFT JOIN event_task et ON e.id = et.event_id AND et.task_group ='0' and et.status = '1'
+                 LEFT JOIN event_task_audit a ON et.audit_id = a.id AND a.STATUS = '1'
+                 INNER JOIN event_task t ON e.id = t.event_id AND t.task_group = '1' and t.status = '1'
+          WHERE e.`status` = '1'
+          GROUP BY e.id) s
+    WHERE s.monCount = s.monEndCount AND s.templateTaskCount = s.templateTaskEndCount
+      AND s.submit_time <![CDATA[>=]]> #{beginTime} AND s.submit_time <![CDATA[<=]]> #{endTime}
+      AND NOT EXISTS(
+            SELECT '' FROM event_mttd_mtta_info ei WHERE ei.num = s.num AND ei.type = '1'
+      )
+  </select>
+
+</mapper>

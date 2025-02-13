@@ -1,0 +1,438 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.event.mapper.EventTaskMapper">
+
+    <select id="getSamplingTaskNotice" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            t.userId,t.userName,t.mobilePhoneNo,t.sendType,t.userType,t.email,
+            GROUP_CONCAT(t.id) id,
+            GROUP_CONCAT(t.title) title,
+            count(1) count,
+            GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
+            GROUP_CONCAT(IF(t.countType = '1',t.title,NULL)) title1,
+            SUM(IF(t.countType = '1',1,0)) count1,
+            GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
+            GROUP_CONCAT(IF(t.countType = '2',t.title,NULL)) title2,
+            SUM(IF(t.countType = '2',1,0)) count2,
+            GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
+            GROUP_CONCAT(IF(t.countType = '3',t.title,NULL)) title3,
+            SUM(IF(t.countType = '3',1,0)) count3
+        from (
+        SELECT al.id,al.title,al.email,al.userId,al.userName,al.notice_type,al.mobilePhoneNo,al.sendType,al.userType,
+        CASE when count &lt;= ${secondInterval} then '1'
+        when count &gt; ${secondInterval} and count &lt;= ${thirdInterval} then '2'
+        when count &gt; ${thirdInterval} then '3' else '' end as countType
+        from (
+        SELECT ba.id,CONCAT('Case # ',e.event_no,'-',e.title_prefix,' ',e.title,' ',t.title) title,u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,
+        CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+        case WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') &gt; DATE_FORMAT(ba.end_time, '%Y-%m-%d') then 0
+        WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') = DATE_FORMAT(ba.end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time)
+        ELSE TIMESTAMPDIFF(MINUTE, ba.start_time, CONCAT( DATE_FORMAT(ba.start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(ba.end_time, '%T'))) +
+        ( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; ba.start_time AND CAST(workday as datetime) &lt; ba.end_time ) * #{timeDifference} end count
+        from (
+        SELECT
+        au.id,
+        au.task_id,
+        au.audit_user_id,
+        au.notice_type,
+        IF(w1.id is NULL,(SELECT CONCAT(MIN(workday),#{workBeginTime}) from s_workday WHERE workday &gt; au.start_time_),au.start_time_) start_time,
+        IF(w2.id is NULL,(SELECT CONCAT(MAX(workday),#{workEndTime}) from s_workday WHERE workday &lt; au.end_time_),au.end_time_) end_time
+        from
+        (SELECT *,
+        CASE WHEN create_time &lt; CONCAT(DATE_FORMAT(create_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(create_time, '%Y-%m-%d'),#{workBeginTime})
+        WHEN  create_time &gt; CONCAT(DATE_FORMAT(create_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(create_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+        ELSE create_time END as start_time_,
+        CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
+        WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+        ELSE now() END as end_time_
+        from event_task_sampling_record
+        where `status` = '1'
+        AND EXISTS (
+        SELECT '' FROM event_sampling_record r WHERE r.id = event_task_sampling_record.event_sampling_id AND r.status = 1
+        )
+        and sampling_status = '0') au
+        LEFT JOIN s_workday w1 on w1.workday = DATE_FORMAT(au.start_time_, '%Y-%m-%d')
+        LEFT JOIN s_workday w2 on w2.workday = DATE_FORMAT(au.end_time_, '%Y-%m-%d')
+        ) ba
+        inner join event_task t on ba.task_id = t.id and t.`status` = '1'
+        inner join event e on t.event_id = e.id and e.`status` = '1'
+        INNER JOIN sys_user u on ba.audit_user_id = u.user_id
+        left join s_user_send_type st on st.user_id = u.user_id
+        HAVING count &gt; ${firstInterval}
+        ) al
+        HAVING countType != al.notice_type or al.notice_type is NULL
+        )t
+        GROUP BY t.userId
+    </select>
+
+    <update id="updateBatch" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            update event_task_sampling_record
+            set
+            notice_type = #{item.countType,jdbcType=CHAR}
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <select id="getClaimNoticeTask" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            t.userId,t.userName,t.mobilePhoneNo,t.sendType,t.userType,t.email,
+            GROUP_CONCAT(t.id) id,
+            GROUP_CONCAT('Case-',t.event_no,t.event_title,' ',t.title) title,
+            count(1) count,
+            GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
+            GROUP_CONCAT(IF(t.countType = '1',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title1,
+            SUM(IF(t.countType = '1',1,0)) count1,
+            GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
+            GROUP_CONCAT(IF(t.countType = '2',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title2,
+            SUM(IF(t.countType = '2',1,0)) count2,
+            GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
+            GROUP_CONCAT(IF(t.countType = '3',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title3,
+            SUM(IF(t.countType = '3',1,0)) count3
+        from (
+        SELECT al.id, al.event_id, al.title, al.userId, al.notice_type noticeType, al.userName,al.mobilePhoneNo,al.sendType,al.userType,al.email,
+        al.event_no,al.event_title,
+        CASE when (al.count - al.param_value) &lt;= ${secondInterval} then '1'
+        when (al.count - al.param_value) &gt; ${secondInterval} and (al.count - al.param_value) &lt;= ${thirdInterval} then '2'
+        when (al.count - al.param_value) &gt; ${thirdInterval} then '3' else '' end as countType
+        from (
+        SELECT ba.*,u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ifnull(p.param_value,0) param_value,
+        CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+        case WHEN DATE_FORMAT(start_time, '%Y-%m-%d') &gt; DATE_FORMAT(end_time, '%Y-%m-%d') then 0
+        WHEN DATE_FORMAT(start_time, '%Y-%m-%d') = DATE_FORMAT(end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, start_time, end_time)
+        ELSE TIMESTAMPDIFF(MINUTE, start_time, CONCAT( DATE_FORMAT(start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(end_time, '%T'))) +
+        ( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; start_time AND CAST(workday as datetime) &lt; end_time ) * #{timeDifference} end count
+        from (
+        SELECT
+        au.id, au.event_id, au.user_id, au.title, au.notice_type,au.is_manage_task,au.event_no,au.event_title,
+        IF(w1.id is NULL,(SELECT CONCAT(MIN(workday),#{workBeginTime}) from s_workday WHERE workday &gt; au.start_time_),au.start_time_) start_time,
+        IF(w2.id is NULL,(SELECT CONCAT(MAX(workday),#{workEndTime}) from s_workday WHERE workday &lt; au.end_time_),au.end_time_) end_time
+        from
+        (SELECT id,event_id,title,user_id,claim_notice_type notice_type,is_manage_task,event_no,event_title,
+        CASE WHEN start_time_ &lt; CONCAT(DATE_FORMAT(start_time_, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(start_time_, '%Y-%m-%d'),#{workBeginTime})
+        WHEN  start_time_ &gt; CONCAT(DATE_FORMAT(start_time_, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(start_time_, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+        ELSE start_time_ END as start_time_,
+        CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
+        WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+        ELSE now() END as end_time_
+        from
+        <if test="_parameter.get('haveDuty') == 1">v_event_task_notclaim_duty</if>
+        <if test="_parameter.get('haveDuty') == 0">v_event_task_notclaim_noduty</if>
+        ) au
+        LEFT JOIN s_workday w1 on w1.workday = DATE_FORMAT(au.start_time_, '%Y-%m-%d')
+        LEFT JOIN s_workday w2 on w2.workday = DATE_FORMAT(au.end_time_, '%Y-%m-%d')
+        ) ba
+        INNER JOIN sys_user u on ba.user_id = u.user_id and u.status = '1'
+        left join s_user_send_type st on st.user_id = u.user_id
+        left join (SELECT param_value from s_param_value where `status` = '1' and param_id = 'manage_task_delayed_time') p ON ba.is_manage_task = '1'
+        /*WHERE NOT EXISTS(
+        SELECT
+        ''
+        FROM sys_user s_us
+        LEFT JOIN sys_user_role uf ON s_us.user_id = uf.user_id
+        LEFT JOIN sys_role_menu fm ON uf.role_id = fm.role_id
+        LEFT JOIN sys_menu m ON fm.menu_id = m.menu_id
+        LEFT JOIN s_user_send_type st on st.user_id = s_us.id
+        where m.permission = 'permission:customerAnalyst'
+        AND s_us.`status` = '1' AND s_us.user_id = u.user_id
+        )*/
+        HAVING (count - param_value) &gt; ${firstInterval}
+        ) al
+        HAVING countType != al.notice_type or al.notice_type is NULL
+        )t
+        GROUP BY t.userId
+    </select>
+
+    <update id="updateClaimNoticeTypeBatch" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE event_task set claim_notice_type = #{item.countType,jdbcType=CHAR}
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <select id="getNotfinishManageTask" resultType="java.util.Map">
+        SELECT
+            GROUP_CONCAT('Case-',e.event_no,e.title,' ',t.title) title, COUNT(1) count, DATE_FORMAT(NOW(),'%Y-%m-%d %T') time
+        FROM
+            event_task t,
+            `event` e
+        WHERE
+            t.event_id = e.id
+          AND e.`status` = '1'
+          AND t.`status` = '1'
+          AND t.is_manage_task = '1'
+          and t.is_close = '0'
+          AND t.audit_status != '0'
+    </select>
+
+    <select id="selectSamplingEvent" resultType="com.starso.job.modules.event.domain.Event">
+        SELECT
+            event.id,CONCAT(YEAR(event.create_time),'-',event.event_no) event_no, event.title_prefix, event.title, event.description, event.level_id, event.status, date_format(event.beagin_time,'%Y-%m-%d %T') beginTimeStr,
+            date_format(event.end_time,'%Y-%m-%d %T') endTimeStr,date_format(event.create_time,'%Y-%m-%d %T') createTimeStr,
+            event.create_by, date_format(event.update_time,'%Y-%m-%d %T') updateTimeStr, event.update_by,event.is_close,event.is_all_dept,event.is_reopen,event.template_id
+            ,event.close_reason,event.reject_reason,event.alert_user_id,event.template_type,event.espot_check_status,event.is_lock,event.event_desc,
+            group_concat(DISTINCT et.assignee) taskAssignees
+        FROM event event
+        INNER JOIN event_task et ON event.id = et.event_id AND et.status = 1
+        where event.espot_check_status = 1
+        AND event.status = 1
+        AND NOT EXISTS(
+        SELECT '' FROM event_sampling_record r where r.event_id = event.id and r.status = '1' and r.sampling_status = '0'
+        )
+        GROUP BY event.id
+    </select>
+
+    <select id="selectCountByToday" parameterType="java.lang.String" resultType="java.lang.Integer">
+        select count(id) from s_workday_spot where workday = #{today, jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectSamplingUsers" parameterType="java.lang.Integer" resultType="com.starso.system.api.domain.SysUser">
+        select a.user_id,a.nick_name,ceil(a.ratio*#{ratio,javaType=INTEGER}/100*a.count/100) `rows` from (
+        SELECT
+        u.user_id,
+        u.`nick_name`,
+        IFNULL(r.ratio, 100) ratio,
+        COUNT(DISTINCT e.id) count
+        FROM
+        sys_user u
+        INNER JOIN event_task t ON t.assignee = u.user_id
+        INNER JOIN event e ON t.event_id = e.id
+        LEFT JOIN s_user_sampling_ratio r ON r.user_id = u.user_id AND r.`status` = '1'
+        inner join sys_user_role ur on ur.user_id = u.user_id
+        inner join sys_role sr on sr.role_id = ur.role_id and
+        (sr.role_key = 'permission:two' or sr.role_key = 'permission:three')
+        WHERE
+        u.`status` = '1'
+        AND t.`status` = '1'
+        AND e.`status` = '1'
+        AND e.espot_check_status = '0'
+        AND t.is_manage_task = '0'
+        AND t.task_group = '1'
+        and (DATE_FORMAT(
+        t.last_submit_time,
+        '%Y-%m-%d %H'
+        ) BETWEEN DATE_FORMAT(
+        date_sub(NOW(), INTERVAL 24 HOUR),
+        '%Y-%m-%d %H'
+        ) AND DATE_FORMAT(
+        now(),
+        '%Y-%m-%d %H'
+        ))
+        GROUP BY u.user_id
+        ) a
+        order by (a.ratio*#{ratio,javaType=INTEGER}/100) desc
+    </select>
+
+    <update id="samplingTask" parameterType="java.util.List">
+        <foreach collection="list" item="user" separator=";">
+            update event e set e.espot_check_status = '1',e.is_lock = '1'
+            where exists(
+            select 1 from (
+            SELECT t.* FROM (
+            SELECT e.*,MAX(et.last_submit_time) handlerTime FROM `event` e
+            INNER JOIN event_task et ON e.id = et.event_id AND et.`status` = 1 AND et.is_manage_task = 0
+            WHERE  et.assignee = #{user.userId,jdbcType=VARCHAR}
+            AND e.espot_check_status = 0
+            AND e.`status` = 1
+            GROUP BY e.id) t
+            WHERE (t.handlerTime BETWEEN
+            DATE_FORMAT(
+            date_sub(NOW(), INTERVAL 24 HOUR),
+            '%Y-%m-%d %T'
+            ) AND DATE_FORMAT(
+            now(),
+            '%Y-%m-%d %T'
+            ))
+            ORDER BY RAND()
+            LIMIT 0, #{user.rows,jdbcType=BIGINT}
+            ) r where e.id = r.id
+            )
+        </foreach>
+    </update>
+
+    <select id="selectEventTaskStartedOver" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT t.userId,t.userName,t.mobilePhoneNo,t.sendType,t.userType,t.email,
+               GROUP_CONCAT(t.id) id,
+               GROUP_CONCAT('Case-',t.event_no,t.event_title,' ',t.title) title,
+               count(1) count,
+		GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
+		GROUP_CONCAT(IF(t.countType = '1',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title1,
+		SUM(IF(t.countType = '1',1,0)) count1,
+		GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
+		GROUP_CONCAT(IF(t.countType = '2',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title2,
+		SUM(IF(t.countType = '2',1,0)) count2,
+		GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
+		GROUP_CONCAT(IF(t.countType = '3',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title3,
+		SUM(IF(t.countType = '3',1,0)) count3
+        from (
+            SELECT al.id, al.title, al.user_id userId, al.audit_status,al.start_notice_type,al.userName,al.mobilePhoneNo,al.sendType,al.userType,al.email,
+            al.event_no,al.event_title,
+            CASE when count &lt;= ${secondInterval} then '1'
+            when count &gt; ${secondInterval} and count &lt;= ${thirdInterval} then '2'
+            when count &gt; ${thirdInterval} then '3' else '' end as countType
+            from (
+            SELECT ba.*,u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,
+            CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+            case WHEN DATE_FORMAT(start_time, '%Y-%m-%d') &gt; DATE_FORMAT(end_time, '%Y-%m-%d') then 0
+            WHEN DATE_FORMAT(start_time, '%Y-%m-%d') = DATE_FORMAT(end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, start_time, end_time)
+            ELSE TIMESTAMPDIFF(MINUTE, start_time, CONCAT( DATE_FORMAT(start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(end_time, '%T'))) +
+            ( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; start_time AND CAST(workday as datetime) &lt; end_time ) * #{timeDifference} end count
+            from (
+            SELECT
+            au.id, au.event_id,au.title, au.assignee user_id, au.audit_status, au.start_notice_type,au.event_no,au.event_title,
+            IF(w1.id is NULL,(SELECT CONCAT(MIN(workday),#{workBeginTime}) from s_workday WHERE workday &gt; au.start_time_),au.start_time_) start_time,
+            IF(w2.id is NULL,(SELECT CONCAT(MAX(workday),#{workEndTime}) from s_workday WHERE workday &lt; au.end_time_),au.end_time_) end_time
+            from
+            (SELECT et.*,e.event_no,e.title event_title,
+            CASE WHEN et.start_time &lt; CONCAT(DATE_FORMAT(et.start_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(et.start_time, '%Y-%m-%d'),#{workBeginTime})
+            WHEN  et.start_time &gt; CONCAT(DATE_FORMAT(et.start_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(et.start_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+            ELSE et.start_time END as start_time_,
+            CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
+            WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+            ELSE now() END as end_time_
+            from event_task et
+            INNER JOIN event e ON et.event_id = e.id AND e.status = 1
+            where et.is_close = '0' AND et.status = '1' AND et.audit_status = '1' AND et.is_manage_task = '0' AND e.is_close = 0) au
+            LEFT JOIN s_workday w1 on w1.workday = DATE_FORMAT(au.start_time_, '%Y-%m-%d')
+            LEFT JOIN s_workday w2 on w2.workday = DATE_FORMAT(au.end_time_, '%Y-%m-%d')
+            ) ba
+            INNER JOIN sys_user u on ba.user_id = u.user_id
+            left join s_user_send_type st on st.user_id = u.user_id
+            /*WHERE NOT EXISTS(
+            SELECT
+            ''
+            FROM s_user s_us
+            LEFT JOIN s_user_funrole uf ON s_us.id = uf.user_id
+            LEFT JOIN s_funrole_menu fm ON uf.role_id = fm.role_id
+            LEFT JOIN s_menu m ON fm.menu_id = m.id
+            LEFT JOIN s_user_send_type st on st.user_id = s_us.id
+            where m.permission = 'permission:customerAnalyst'
+            AND s_us.`status` = '1' AND s_us.id = u.id
+            )*/
+            HAVING count &gt; ${firstInterval}
+            ) al
+            HAVING countType != al.start_notice_type or al.start_notice_type is NULL
+            )t
+        GROUP BY t.userId
+    </select>
+
+    <update id="updateBatchStartNoticeType" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            update event_task
+            set
+            start_notice_type = #{item.countType,jdbcType=CHAR}
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <select id="selectEventTaskAuditOver" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT
+            GROUP_CONCAT(t.id) id,
+            GROUP_CONCAT('Case-',t.event_no,t.event_title,' ',t.title) title,
+            count(1) count,
+            GROUP_CONCAT(IF(t.countType = '0',t.id,NULL)) id0,
+            GROUP_CONCAT(IF(t.countType = '0',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title0,
+            SUM(IF(t.countType = '0',1,0)) count0,
+            GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
+            GROUP_CONCAT(IF(t.countType = '1',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title1,
+            SUM(IF(t.countType = '1',1,0)) count1,
+            GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
+            GROUP_CONCAT(IF(t.countType = '2',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title2,
+            SUM(IF(t.countType = '2',1,0)) count2,
+            GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
+            GROUP_CONCAT(IF(t.countType = '3',CONCAT('Case-',t.event_no,t.event_title,' ',t.title),NULL)) title3,
+            SUM(IF(t.countType = '3',1,0)) count3
+        from (
+            SELECT al.id, al.title, al.audit_notice_type,al.event_no,al.event_title,
+            CASE when count > ${zeroInterval} and count &lt;= ${firstInterval} then '0'
+            when count > ${firstInterval} AND count &lt;= ${secondInterval} then '1'
+            when count &gt; ${secondInterval} and count &lt;= ${thirdInterval} then '2'
+            when count &gt; ${thirdInterval} then '3' else '' end as countType
+            from (
+            SELECT ba.*,
+            case WHEN DATE_FORMAT(start_time, '%Y-%m-%d') > DATE_FORMAT(end_time, '%Y-%m-%d') then 0
+            WHEN DATE_FORMAT(start_time, '%Y-%m-%d') = DATE_FORMAT(end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, start_time, end_time)
+            ELSE TIMESTAMPDIFF(MINUTE, start_time, end_time) end count
+            from (
+            SELECT
+            au.id, au.event_id,au.title, au.audit_notice_type,au.event_no,au.event_title,
+            au.start_time_ start_time,
+            au.end_time_ end_time
+            from
+            (SELECT et.*,e.event_no,e.title event_title,
+            et.last_submit_time as start_time_,
+            now() as end_time_
+            from event_task et
+            INNER JOIN event e ON et.event_id = e.id AND e.status = 1
+            where et.is_close = '0' AND et.status = '1' AND et.audit_status = '2' AND et.is_manage_task = '0' AND e.is_close = 0) au
+            ) ba
+            HAVING count &gt;= ${zeroInterval}
+            ) al
+            HAVING countType != al.audit_notice_type or al.audit_notice_type is NULL
+            )t
+    </select>
+    <select id="getOverTimeNoticeEvents" resultType="java.util.Map" parameterType="java.util.Map">
+        SELECT t.userId,t.email,t.mobilePhoneNo,t.userName,t.userType,t.sendType,
+        GROUP_CONCAT(t.id) id,
+        GROUP_CONCAT(CONCAT_WS('@_ssp_@',t.title_prefix,t.title) SEPARATOR '#_ssp_#') title,
+        count(1) count,
+        GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
+        GROUP_CONCAT(IF(t.countType = '1',CONCAT_WS('@_ssp_@',t.title_prefix,t.title), NULL ) SEPARATOR '#_ssp_#' ) title1,
+        SUM(IF(t.countType = '1',1,0)) count1,
+        GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
+        GROUP_CONCAT(IF(t.countType = '2',CONCAT_WS('@_ssp_@',t.title_prefix,t.title), NULL ) SEPARATOR '#_ssp_#' ) title2,
+        SUM(IF(t.countType = '2',1,0)) count2,
+        GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
+        GROUP_CONCAT(IF(t.countType = '3',CONCAT_WS('@_ssp_@',t.title_prefix,t.title), NULL ) SEPARATOR '#_ssp_#' ) title3,
+        SUM(IF(t.countType = '3',1,0)) count3
+        from (
+        SELECT e.id,e.title,e.title_prefix,u.email,u.user_id userId,u.nick_name userName,a.notice_type noticeType,u.phonenumber mobilePhoneNo,u.user_type userType,
+        CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+        CASE when a.assign_time&lt;=DATE_FORMAT(#{firstTime,jdbcType=VARCHAR},'%Y-%m-%d %H:%i:%s') and a.assign_time&gt; DATE_FORMAT(#{secondTime,jdbcType=VARCHAR},'%Y-%m-%d %H:%i:%s')  then '1'
+        when a.assign_time&lt;=DATE_FORMAT(#{secondTime,jdbcType=VARCHAR},'%Y-%m-%d %H:%i:%s') and a.assign_time&gt; DATE_FORMAT(#{thirdTime,jdbcType=VARCHAR},'%Y-%m-%d %H:%i:%s') then '2'
+        when a.assign_time&lt;=DATE_FORMAT(#{thirdTime,jdbcType=VARCHAR},'%Y-%m-%d %H:%i:%s')  then '3'
+        else '' end as countType
+        from event_audit_result a
+        INNER JOIN event e on e.id=a.event_id and e.audit_result_num=a.audit_result_num and e.audit_result_status=a.audit_result_status
+        INNER JOIN sys_user u on a.audit_user_id = u.user_id
+        left join s_user_send_type st on st.user_id = u.user_id
+        where a.audit_result_status=2 and e.status='1' and e.is_close = 0 AND e.is_reopen = '0'
+        HAVING countType != a.notice_type or a.notice_type is NULL or a.notice_type=0
+        ) t
+        GROUP BY t.userId
+    </select>
+    <select id="getAssignNoticeEvents" resultType="java.util.Map">
+        SELECT t.userId,t.email,t.mobilePhoneNo,t.userName,t.userType,t.sendType,
+               GROUP_CONCAT(t.id) id,
+               GROUP_CONCAT(CONCAT_WS('@_ssp_@',t.title_prefix,t.title) SEPARATOR '#_ssp_#') title,
+               count(1) count,0 countType
+        from
+            (SELECT e.id,e.title,e.title_prefix,u.email,u.user_id userId,u.nick_name userName,a.notice_type noticeType,u.phonenumber mobilePhoneNo,u.user_type userType,
+            CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType
+            from event_audit_result a
+            INNER JOIN event e on e.id=a.event_id and e.audit_result_num=a.audit_result_num
+            INNER JOIN sys_user u on a.audit_user_id = u.user_id
+            left join s_user_send_type st on st.user_id = u.user_id
+            where a.audit_result_status=2 and a.notice_type is NULL
+            ) t
+        GROUP BY t.userId
+    </select>
+
+    <update id="updateBatchEventAudits" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            update event_audit_result
+            set
+            notice_type = #{item.countType,jdbcType=CHAR}
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <update id="updateBatchAuditNoticeType" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            update event_task
+            set
+            audit_notice_type = #{item.countType,jdbcType=CHAR}
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+</mapper>

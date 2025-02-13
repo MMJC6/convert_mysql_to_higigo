@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.dataTimer.mapper.SspEventAlertsMapper">
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.event.domain.EventAlerts">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="event_id" jdbcType="VARCHAR" property="eventId" />
+    <result column="alert_id" jdbcType="VARCHAR" property="alertId" />
+    <result column="task_id" jdbcType="VARCHAR" property="taskId" />
+    <result column="is_alert" jdbcType="VARCHAR" property="isAlert" />
+    <result column="source_id" jdbcType="CHAR" property="sourceId" />
+    <result column="status" jdbcType="CHAR" property="status" />
+    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="reject_id" jdbcType="VARCHAR" property="rejectId" />
+    <result column="reject_time" jdbcType="TIMESTAMP" property="rejectTime" />
+    <result column="reject_status" jdbcType="VARCHAR" property="rejectStatus" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    ea.id, ea.event_id, ea.alert_id, ea.source_id, ea.status, ea.create_time, ea.update_time, ea.task_id, ea.is_alert,
+    ea.reject_time,ea.reject_status
+  </sql>
+  <select id="selectSspEventAlerts" parameterType="com.starso.job.modules.event.domain.EventAlerts" resultMap="BaseResultMap">
+    select DISTINCT
+    <include refid="Base_Column_List" />,su.user_name create_by,u.user_name update_by,s_u.user_name reject_id
+    from event_alerts ea
+    INNER JOIN sys_user su ON ea.create_by = su.user_id AND su.status = '1'
+    LEFT JOIN sys_user u ON ea.update_by = u.user_id AND u.status = '1'
+    LEFT JOIN sys_user s_u ON ea.reject_id = s_u.user_id AND s_u.status = '1'
+    where ea.status = '1'
+    <if test="updateTime != null">
+    	AND GREATEST(ea.update_time,ifnull(ea.reject_time,ea.update_time)) >= #{updateTime, jdbcType=TIMESTAMP}
+    </if>
+  </select>
+</mapper>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.file.mapper.FileMapper" >
+
+	<select id="getFilePath" resultType="String" parameterType="com.starso.system.api.domain.SFile">
+		SELECT
+			DISTINCT f.file_url
+		FROM
+			s_file f
+		WHERE
+			f.id = #{fileId,jdbcType=VARCHAR}
+	</select>
+
+	<insert id="saveFilePath" parameterType="com.starso.system.api.domain.SFile">
+		insert into s_file (id,file_url,file_name,size,type,create_time,create_By,update_time,update_By,status) values(
+			#{fileId,jdbcType=VARCHAR},
+			#{fileUrl,jdbcType=VARCHAR},
+			#{fileName,jdbcType=VARCHAR},
+			#{size,jdbcType=VARCHAR},
+			#{type,jdbcType=VARCHAR},
+			now(),
+			#{createBy,jdbcType=VARCHAR},
+			now(),
+			#{updateBy,jdbcType=VARCHAR},
+			'1'
+		)
+	</insert>
+
+	<select id="getFilePaths" parameterType="java.util.List" resultType="String">
+		SELECT
+			DISTINCT f.file_url
+		FROM
+			s_file f
+		WHERE
+			f.id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+	</select>
+
+	<select id="getFileInfoById" parameterType="String" resultType="com.starso.system.api.domain.SFile">
+		SELECT
+			sf.id fileId,
+			sf.file_name fileName,
+			sf.file_url fileUrl
+		FROM
+			s_file sf
+		WHERE
+			sf.id = #{fileId} AND sf.`status` = '1'
+	</select>
+	<select id="getLogoPath" resultType="com.starso.system.api.domain.SFile">
+		SELECT id fileId,type
+		FROM s_file
+		WHERE type in ('bigLogo','smallLogo')
+	</select>
+
+	<delete id="deleteLogo" parameterType="java.lang.String">
+		delete from s_file where type = #{type,jdbcType=VARCHAR}
+	</delete>
+
+	<insert id="insertSFileScheduleInfo" >
+    REPLACE into s_file(id,file_url, file_name, size, type, create_time, create_by, update_time, update_by, status)
+    values (#{fileId},#{fileUrl}, #{fileName}, #{size}, #{type}, #{createTime}, '1', #{updateTime}, '1', #{status})
+    </insert>
+</mapper>

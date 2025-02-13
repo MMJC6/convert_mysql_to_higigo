@@ -1,0 +1,1032 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.alert.mapper.AlertMapper">
+
+	<select id="selectNightAlertConfig" resultType="com.starso.job.modules.alert.domain.AlertConfig">
+		select
+			id, alert_from, alert_title, alert_priority, alert_dev_ip, alert_dev_name, alert_dev_type,
+			alert_csrcip, alert_cdstip, alert_idstport, alert_domain, defined_type, prescription, type, create_time,
+			create_by, update_time, update_by, status,alert_description,expire_time, DATE_FORMAT(expire_time, '%Y-%m-%d %T' ) expireTimeStr,
+			spare1, spare2, spare3, spare4, spare5
+		from alert_config
+		where status = '1' and type = '0'
+	</select>
+
+	<select id="selectAlertChanged" resultType="java.lang.String">
+		SELECT `value` from tbl_sequence where sequence_name = 'alert_rule_change'
+	</select>
+
+	<select id="selectUnNightUnClose" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		select
+			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
+			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
+			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
+			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time
+		from workbench_alert_info t
+		where t.is_close = '0' and t.is_night = '0' and t.status <![CDATA[<>]]> 0  and t.is_del = '0'
+	</select>
+
+	<update id="updateIsNight" parameterType="java.util.List">
+		update workbench_alert_info set is_night = '1'
+		where id in
+		<foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+			#{item.assignId}
+		</foreach>
+	</update>
+
+	<insert id="insertAlertRecordBatch" parameterType="java.util.List">
+		insert into alert_record_list (id, assign_id, new_time,
+		rule_id, alert_title, alert_priority,
+		alert_dev_ip, alert_dev_name, alert_dev_type,
+		alert_description
+		)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(#{item.id,jdbcType=VARCHAR}, #{item.assignId,jdbcType=VARCHAR}, #{item.newTime,jdbcType=TIMESTAMP},
+			#{item.ruleId,jdbcType=VARCHAR}, #{item.alertTitle,jdbcType=VARCHAR}, #{item.alertPriority,jdbcType=CHAR},
+			#{item.alertDevIp,jdbcType=VARCHAR}, #{item.alertDevName,jdbcType=VARCHAR}, #{item.alertDevType,jdbcType=VARCHAR},
+			#{item.alertDescription,jdbcType=LONGVARCHAR}
+			)
+		</foreach>
+	</insert>
+
+	<update id="updateAlertRuleChange">
+		update tbl_sequence set value = '0' where sequence_name = 'alert_rule_change'
+	</update>
+
+	<delete id="deleteTemporary">
+		DELETE FROM workbench_alert_info_temporary
+	</delete>
+
+	<update id="clearNewIdentify">
+		UPDATE workbench_alert_info
+		set is_new = '0'
+		where is_new = '1';
+	</update>
+
+	<select id="selectDbgMinLrecepttime" resultType="String">
+		SELECT `key` from tbl_sequence where sequence_name = 'dbg_lrecepttime'
+	</select>
+
+	<select id="selectMaxLreceptTime" resultType="java.lang.Long">
+		SELECT MAX(loccurtime) id from custom_events
+	</select>
+
+	<update id="updateDbgMinAlertId" parameterType="String">
+		update tbl_sequence set `key` = #{lrecepttime,jdbcType=BIGINT} where sequence_name = 'dbg_lrecepttime'
+	</update>
+
+	<select id="selectCustomEvent" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT ruid id, ceventname, ieventlevel, cdevip, cdevname, cdevtype, '1' alertSrc,
+		       ruid alertId,'0' `status`,'' stage,loccurtime, cstandby11,
+		       <if test="flag!=null and flag !=''">
+			      cstandby12,
+	           </if>
+		       cstandby6,csrcip,cdstip,idstport, '0' isNight,'0' source,cruleid,ceventdigest
+		FROM custom_events
+		where loccurtime >= #{minId} and loccurtime <![CDATA[<=]]> #{maxId}
+		<if test="devIp != null and devIp != ''">
+			AND cdevip in
+			<foreach collection="devIp.split(',')"  item="item" index="index" open="(" separator="," close=")">
+				#{item}
+			</foreach>
+		</if>
+	</select>
+
+	<select id="selectAlertNotice" resultType="com.starso.job.modules.alert.domain.AlertConfig">
+		select
+			id, alert_from, alert_title, alert_priority, alert_dev_ip, alert_dev_name, alert_dev_type,
+			alert_csrcip, alert_cdstip, alert_idstport, alert_domain, defined_type, prescription, type, create_time,
+			create_by, update_time, update_by, status,alert_description,expire_time, DATE_FORMAT(expire_time, '%Y-%m-%d %T' ) expireTimeStr,
+			spare1, spare2, spare3, spare4, spare5
+		from alert_config
+		where status = '1' and type = '2'
+	</select>
+
+	<select id="selectAlreadSend" resultType="int" parameterType="string">
+		select
+			count(1)
+		from alert_notice_record
+		where id=#{_parameter,jdbcType=VARCHAR}
+	</select>
+
+	<select id="selectUserByRuleId" parameterType="java.lang.String" resultType="com.starso.system.api.domain.SysUser">
+		SELECT
+			u.user_id,
+			u.user_type,
+			u.nick_name,
+			u.email,
+			u.phonenumber,
+			CONCAT(IF(send.wechat_status = '1','1,',''),IF(send.phone_status = '1','2,',''),IF(send.email_status = '1','3,','')) sendType
+		FROM alert_notice_list li
+		INNER JOIN sys_user u ON li.user_id = u.user_id AND u.status = '1'
+		INNER JOIN s_user_send_type send ON u.user_id = send.user_id
+		WHERE li.type = 0
+		  and li.rule_id=#{_parameter,jdbcType=VARCHAR}
+		UNION
+		SELECT
+			'' id,
+			'2' user_type,
+			''  `name`,
+			li.email,
+			li.mobile_phone_no,
+			'' sendType
+		FROM alert_notice_list li
+		WHERE li.type = 1
+		  and li.rule_id=#{_parameter,jdbcType=VARCHAR}
+	</select>
+
+
+	<insert id="insertAlreadSend" parameterType="java.util.List">
+		insert into alert_notice_record (id) values
+		<foreach collection="list" item="item" separator=",">
+			(#{item,jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+
+	<select id="selectDbgMinAlertId" resultType="java.lang.String">
+		SELECT `key` from tbl_sequence where sequence_name = 'dbg_alert_id'
+	</select>
+
+	<select id="selectFilterList" resultType="com.starso.job.modules.alert.domain.AlertConfig">
+		select
+			id, alert_from, alert_title, alert_priority, alert_dev_ip, alert_dev_name, alert_dev_type,
+			alert_csrcip, alert_cdstip, alert_idstport, alert_domain, defined_type, prescription, type, create_time,
+			create_by, update_time, update_by, status,alert_description,expire_time, DATE_FORMAT(expire_time, '%Y-%m-%d %T' ) expireTimeStr,
+			spare1, spare2, spare3, spare4, spare5
+		from alert_config
+		where status = '1' and type = '1' and expire_time > now();
+	</select>
+
+	<insert id="insertTemporaryInfos" parameterType="list">
+		insert into workbench_alert_info_temporary (id, alert_no, title, priority, dev_ip, dev_name,
+		dev_type, alert_src, status, stage, create_time, important_level, num, description,csrcip,
+		cdstip,idstport,domain,get_time, level_update_time, is_night,source,alert_id,cus_name,cruleid,ceventdigest)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(MD5(UUID()), #{item.id,jdbcType=BIGINT}, #{item.ceventname,jdbcType=VARCHAR},
+			#{item.ieventlevel,jdbcType=CHAR}, #{item.cdevip,jdbcType=VARCHAR}, #{item.cdevname,jdbcType=VARCHAR},
+			#{item.cdevtype,jdbcType=VARCHAR}, #{item.alertSrc,jdbcType=CHAR}, #{item.status,jdbcType=CHAR},
+			#{item.stage,jdbcType=CHAR}, from_unixtime(#{item.loccurtime}/1000,'%Y-%m-%d %T'), #{item.ieventlevel,jdbcType=CHAR},
+			#{item.num,jdbcType=INTEGER}, #{item.cstandby11,jdbcType=LONGVARCHAR},#{item.csrcip,jdbcType=VARCHAR},
+			#{item.cdstip,jdbcType=VARCHAR},#{item.idstport,jdbcType=INTEGER},#{item.cstandby6,jdbcType=VARCHAR},
+			now(), now(),#{item.isNight,jdbcType=VARCHAR},#{item.source,jdbcType=VARCHAR},#{item.alertId,jdbcType=VARCHAR},
+			 #{item.cstandby12,jdbcType=VARCHAR},#{item.cruleid,jdbcType=VARCHAR},#{item.ceventdigest,jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+
+	<delete id="deleteSameAlert" parameterType="java.util.Map">
+		DELETE tem FROM workbench_alert_info_temporary tem WHERE EXISTS(
+			SELECT '' FROM workbench_alert_info info WHERE tem.alert_no = info.alert_no
+		)
+	</delete>
+
+	<select id="selectAllFromTemporary" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT id, alert_no, title, priority, dev_ip, dev_name,
+			   dev_type, alert_src, status, stage, create_time, important_level, num, description,csrcip,
+			   cdstip,idstport,domain,get_time, level_update_time, is_night,source,alert_id,cus_name,cruleid,ceventdigest
+		FROM workbench_alert_info_temporary
+	</select>
+
+	<select id="selectFromTemporary" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT alert_no, title, priority, dev_ip, dev_name, dev_type, alert_src,`status`,stage,csrcip,
+			   cdstip,idstport,domain,create_time, description, count(1) num,is_night,source,alert_id,cus_name,cruleid,ceventdigest
+		FROM workbench_alert_info_temporary
+		GROUP BY title, description, dev_ip, priority,csrcip,cdstip;
+	</select>
+
+	<insert id="insertAlertInfos" parameterType="java.util.List">
+		insert into workbench_alert_info (id, alert_no, title, priority, dev_ip, dev_name,
+		dev_type, alert_src, status, stage, create_time, important_level, num, description, csrcip,
+		cdstip,idstport,domain,get_time, level_update_time,is_night,source,alert_id,cus_name,cruleid,ceventdigest,merge_alert_no,is_new)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(MD5(UUID()), #{item.alertNo,jdbcType=BIGINT}, #{item.title,jdbcType=VARCHAR},
+			#{item.priority,jdbcType=CHAR}, #{item.devIp,jdbcType=VARCHAR}, #{item.devName,jdbcType=VARCHAR},
+			#{item.devType,jdbcType=VARCHAR}, #{item.alertSrc,jdbcType=CHAR}, #{item.status,jdbcType=CHAR},
+			#{item.stage,jdbcType=CHAR}, #{item.createTime,jdbcType=TIMESTAMP}, #{item.priority,jdbcType=CHAR},
+			#{item.num,jdbcType=INTEGER}, #{item.description,jdbcType=LONGVARCHAR}, #{item.csrcip,jdbcType=VARCHAR},
+			#{item.cdstip,jdbcType=VARCHAR},#{item.idstport,jdbcType=INTEGER},#{item.domain,jdbcType=VARCHAR},
+			now(), now(),#{item.isNight,jdbcType=VARCHAR},
+			#{item.source,jdbcType=CHAR},#{item.alertId,jdbcType=VARCHAR},#{item.cusName,jdbcType=VARCHAR},
+			#{item.cruleid,jdbcType=VARCHAR},#{item.ceventdigest,jdbcType=VARCHAR},#{item.mergeAlertNo,jdbcType=VARCHAR},#{item.isNew,jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+
+	<!--没有客户分析师，无需锁定-->
+	<!--<select id="selectLockAlert" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT a.title,a.description,a.dev_ip,a.priority
+		FROM `event` e
+				 INNER JOIN (
+			SELECT * from
+				(SELECT ea.event_id,ai.title,ai.description,ai.dev_ip,ai.priority,ea.create_time from event_alerts ea ,workbench_alert_info ai
+				 where ea.`status` = '1' and ea.source_id = '1' and ai.is_close = '0' and ai.`status` != '0' and ea.alert_id = ai.id
+				 ) al
+		) a ON e.id = a.event_id
+		where e.`status` = '1' and e.is_close = '0' and a.create_time &lt; STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(),'%Y-%m-%d'),' 00:00:00'),'%Y-%m-%d %T')
+		GROUP BY a.title,a.description,a.dev_ip,a.priority
+	</select>
+
+	<update id="unlockAlert" parameterType="java.util.List">
+		update workbench_alert_info
+		set
+		status = '0'
+		where status = '9'
+		<if test="list != null">
+			<foreach collection="list" item="item" open="" separator="" close="">
+				and !(title = #{item.title,jdbcType=VARCHAR}
+				and priority = #{item.priority,jdbcType=VARCHAR}
+				and dev_ip = #{item.devIp,jdbcType=VARCHAR}
+				and description = #{item.description,jdbcType=VARCHAR})
+			</foreach>
+		</if>
+	</update>
+
+	<select id="selectNotAssignedAlert" parameterType="java.util.List" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT * FROM (
+			SELECT t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
+			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
+			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
+			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time,
+				   '1' as source_id from workbench_alert_info t where t.`status` = '1'
+		) al
+		where
+		<foreach collection="list" item="item" open="" separator=" or " close="">
+			(al.title = #{item.title,jdbcType=VARCHAR}
+			and al.priority = #{item.priority,jdbcType=VARCHAR}
+			and al.dev_ip = #{item.devIp,jdbcType=VARCHAR}
+			and al.description = #{item.description,jdbcType=VARCHAR})
+		</foreach>
+	</select>
+
+	<update id="lockNotAssignedAlert" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update
+			<if test="item.sourceId == 1">
+				workbench_alert_info
+			</if>
+			set
+			status = '9'
+			where id = #{item.id,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+
+	<update id="lockNewAlert" parameterType="java.util.Map">
+		update workbench_alert_info i
+		set
+		i.status = '9'
+		where is_new = '1'
+		and i.status = '0'
+		and
+		<foreach collection="alertList" item="item" open="(" separator=" or " close=")">
+			(i.title = #{item.title,jdbcType=VARCHAR}
+			and i.priority = #{item.priority,jdbcType=VARCHAR}
+			and i.dev_ip = #{item.devIp,jdbcType=VARCHAR}
+			and i.description = #{item.description,jdbcType=VARCHAR})
+		</foreach>
+		and not EXISTS (
+		SELECT 1 from (SELECT title, description, dev_ip, priority from workbench_alert_info where is_close = '0' and `status` != '0' ) o
+		where i.title = o.title and i.description = o.description and i.dev_ip = o.dev_ip and i.priority = o.priority
+		)
+	</update>-->
+
+	<update id="closeAlert" parameterType="java.lang.String">
+		update workbench_alert_info
+		set is_close = '1'
+		where is_epicycle_end = '1'
+		  and is_close = '0'
+			<if test="ge4lunciClose != null and ge4lunciClose==0">
+				and stage BETWEEN 1 AND 3
+			</if>
+		  and TIMESTAMPDIFF(DAY,last_time,now()) &gt;= (select param_value from s_param_value where param_id = 'alert_interval_time' AND status = 1)
+	</update>
+
+	<select id="selectNewAlerts" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		select t.id,t.title,t.description,t.dev_ip,t.priority from workbench_alert_info t
+		where t.status = '0'
+		  and t.is_new = '1'
+		  and not EXISTS (
+				SELECT 1 from (SELECT title, description, dev_ip, priority,csrcip,cdstip from workbench_alert_info where `status` != '0' and is_close = '0') i
+				where t.title = i.title and t.description = i.description and t.dev_ip = i.dev_ip and t.priority = i.priority
+				  and t.csrcip = i.csrcip and t.cdstip = i.cdstip
+			)
+	</select>
+
+	<select id="selectAlertNumStage" resultType="java.lang.Integer" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		select count(id) from workbench_alert_info
+		where title = #{title,jdbcType=VARCHAR} and description = #{description,jdbcType=VARCHAR}
+		  and dev_ip = #{devIp,jdbcType=VARCHAR} and priority = #{priority,jdbcType=VARCHAR}
+		  and csrcip = #{csrcip,jdbcType=VARCHAR} and cdstip = #{cdstip,jdbcType=VARCHAR}
+		  and stage >= 3
+	</select>
+
+	<select id="selectHandleNum" resultType="java.lang.Integer" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT COUNT(u.id) FROM workbench_alert_user u
+		INNER JOIN workbench_alert_info i ON u.alert_id = i.id
+		WHERE i.title = #{title,jdbcType=VARCHAR} and i.description = #{description,jdbcType=VARCHAR}
+		  and i.dev_ip = #{devIp,jdbcType=VARCHAR} and i.priority = #{priority,jdbcType=VARCHAR}
+		  and i.csrcip = #{csrcip,jdbcType=VARCHAR} and i.cdstip = #{cdstip,jdbcType=VARCHAR}
+	</select>
+
+	<select id="selectRecurrentAlert" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT t.id, o.status, o.stage, o.id recurrent_id,
+			   (select au.user_id from workbench_alert_user au where au.alert_id = o.id order by au.assign_time desc limit 0,1) user_id
+		from
+			(SELECT * from workbench_alert_info n where n.status = '0' and n.is_new = '1') t
+				INNER JOIN (
+					SELECT * from workbench_alert_info i
+					where (i.recurrent_id is null or i.recurrent_id = '')
+					and i.is_close = '1'
+					and i.id NOT IN (
+					SELECT r.recurrent_id from workbench_alert_info r
+					where r.`status` != '0'
+					and r.`is_close` = '0'
+				)
+			) o on t.title = o.title and t.description = o.description and t.dev_ip = o.dev_ip
+			    and t.priority = o.priority and t.csrcip = o.csrcip and t.cdstip = o.cdstip
+	</select>
+
+	<update id="updateBatch" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update workbench_alert_info
+			set
+			status = #{item.status,jdbcType=CHAR},
+			stage = #{item.stage,jdbcType=CHAR}
+			<if test="item.recurrentId != null">
+				,recurrent_id = #{item.recurrentId,jdbcType=VARCHAR}
+			</if>
+			<if test="item.alertUserId != null">
+				,alert_user_id = #{item.alertUserId,jdbcType=VARCHAR}
+			</if>
+			where id = #{item.id,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+
+	<update id="updateMergeAlertNoBatch" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update workbench_alert_info
+			set
+			merge_alert_no = #{item.mergeAlertNo,jdbcType=VARCHAR}
+			where id = #{item.id,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+
+	<select id="selectRepetitive" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		<!-- SELECT
+			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,t.space1,
+			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
+			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
+			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time
+		from workbench_alert_info t where t.status = '0' and t.is_new = '1'
+		and EXISTS (
+		SELECT 1 from workbench_alert_info i where i.`status` != '0' and i.is_close = '0' and is_del = '0'
+		and t.title = i.title and t.description = i.description and t.dev_ip = i.dev_ip and t.priority = i.priority
+		and t.csrcip = i.csrcip and t.cdstip = i.cdstip
+		) -->
+
+		SELECT
+			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,t.space1,
+			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
+			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
+			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time,i.alert_no mergeAlertNo
+		from workbench_alert_info t,workbench_alert_info i  where t.status = '0' and t.is_new = '1'
+															  and i.`status` != '0' and i.is_close = '0' and i.is_del = '0'
+		and t.title = i.title and t.description = i.description and t.dev_ip = i.dev_ip and t.priority = i.priority
+		and t.csrcip = i.csrcip and t.cdstip = i.cdstip
+
+	</select>
+
+	<!--   本轮忽略结束，又重新出现的，改为可分配 -->
+	<update id="updateRepetitive" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" open="" close="" separator=";">
+			update workbench_alert_info i
+			set i.num = i.num  + #{item.num,jdbcType=INTEGER},
+			i.is_reappear = if((i.is_epicycle_end = '1'),'1',i.is_reappear),
+			i.stage = case when (i.is_epicycle_end = '1') then i.stage+1
+			else i.stage end,
+			i.create_time2 = case when (i.is_epicycle_end = '1' and i.stage = '2') then #{item.createTime,jdbcType=TIMESTAMP}
+			else i.create_time2 end,
+			i.create_time3 = case when (i.is_epicycle_end = '1' and i.stage = '3') then #{item.createTime,jdbcType=TIMESTAMP}
+			else i.create_time3 end,
+			i.create_time4 = case when (i.is_epicycle_end = '1' and i.stage = '4') then #{item.createTime,jdbcType=TIMESTAMP}
+			else i.create_time4 end,
+			i.space1 = case when (i.is_epicycle_end = '1' and i.stage = '5') then #{item.createTime,jdbcType=TIMESTAMP}
+				when (i.is_epicycle_end = '1' and i.stage > '5') then CONCAT(i.space1,';',#{item.createTime,jdbcType=TIMESTAMP})
+				else i.space1 end,
+			i.is_epicycle_end = if((i.is_epicycle_end = '1'),'0',i.is_epicycle_end)
+			where
+			i.`status` != '0'
+			and i.is_close = '0'
+			and i.is_del = '0'
+			and i.title = #{item.title,jdbcType=VARCHAR}
+			and i.priority = #{item.priority,jdbcType=CHAR}
+			and i.description = #{item.description,jdbcType=VARCHAR}
+			and i.dev_ip = #{item.devIp,jdbcType=VARCHAR}
+			and i.csrcip = #{item.csrcip,jdbcType=VARCHAR}
+			and i.cdstip = #{item.cdstip,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+
+	<!-- 不存在于状态有效且未关闭的，当做新告警处理 -->
+	<update id="updateNotRepetitive" parameterType="java.util.Map">
+		update workbench_alert_info t set t.status = '1'
+		where t.status = '0'
+		  and t.is_new = '1'
+		  and not EXISTS (
+				SELECT 1 from (SELECT title, description, dev_ip, priority,csrcip,cdstip from workbench_alert_info where `status` != '0' and is_close = '0' and is_del = '0') i
+				where t.title = i.title and t.description = i.description and t.dev_ip = i.dev_ip and t.priority = i.priority  and t.is_del='0'
+				  and t.csrcip = i.csrcip and t.cdstip = i.cdstip
+			)
+	</update>
+
+	<update id="setImportantLevel">
+		update workbench_alert_info t
+		set t.important_level = t.important_level + (
+			case when t.important_level = 4 then 1
+				 when (t.important_level = 3 and FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3) > 2) then 2
+				 when (t.important_level = 2 and FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3) > 3) then 3
+				 when (t.important_level = 1 and FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3) > 4) then 4
+				 else FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3) end
+			),
+			t.level_update_time = date_add(t.level_update_time, interval FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3)*3 hour)
+		where
+			t.`status` = '1'
+		  and t.stage = ''
+		  and t.important_level &lt; 5
+		  and t.level_update_time &lt;= DATE_SUB(NOW(), INTERVAL 3 HOUR)
+	</update>
+
+	<update id="updateNoDutyAlerts">
+		UPDATE workbench_alert_info t,workbench_alert_user wu SET t.`status` = 8 , wu.`status` = 8
+		WHERE t.id = wu.alert_id AND t.`status` = 2 AND wu.`status` = 2 AND NOT EXISTS (
+			SELECT '' FROM workbench_schedule_task wt WHERE wu.user_id = wt.executor_id AND (wu.assign_time BETWEEN wt.begain_time AND wt.end_time)
+		  and wt.status = 1 and wt.type = 1
+			)
+	</update>
+
+	<!--查询误报、超时撤回、非值班分配撤回的告警，并统计它们被处理为误报和超时撤回的次数 -->
+	<select id="selectMayEndInfos" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT ai.id,ai.title,COUNT(wu.user_id) count, GROUP_CONCAT(wu.user_id) user_id FROM workbench_alert_info ai
+			LEFT JOIN workbench_alert_user wu ON ai.id = wu.alert_id AND ai.stage = wu.stage
+		WHERE ai.`status` in (3,6,8) AND wu.`status` in (3,6) and ai.is_del = '0' and ai.is_epicycle_end = '0'
+		GROUP BY ai.id
+	</select>
+
+	<select id="getAllAlertUsers" parameterType="int" resultType="com.starso.system.api.domain.SysUser">
+		SELECT u.user_id,u.nick_name,u.phonenumber,u.email,au.count `rows` ,date_format(wt.begain_time,'%Y-%m-%d %T') begainTimeStr, date_format(wt.end_time,'%Y-%m-%d %T') endTimeStr,
+		IFNULL((SELECT IFNULL(COUNT(1),0) from workbench_alert_user wau where wau.status BETWEEN 3 and 4 and u.user_id = wau.user_id),0)/au.num*8 as num
+		from sys_user u
+		LEFT JOIN (SELECT w.user_id ,COUNT(1) count ,(TIMESTAMPDIFF(HOUR, MIN(w.assign_time), NOW())) num from workbench_alert_user w inner join workbench_alert_info a ON a.id = w.alert_id and a.is_del = '0' and a.`status` = '2' where w.`status` = '2' GROUP BY w.user_id ) au on u.user_id = au.user_id
+		INNER JOIN workbench_schedule_task wt ON u.user_id = wt.executor_id AND wt.type = 1 AND wt.`status` = 1
+		where u.status = '1'
+		  AND (NOW() BETWEEN wt.begain_time AND wt.end_time)
+		  and EXISTS(
+			SELECT
+			*
+			FROM
+			sys_user_role uf,
+			sys_role_menu fm,
+			sys_menu m
+			WHERE
+			uf.role_id = fm.role_id
+		  AND fm.menu_id = m.menu_id
+		  and m.`status` = '1'
+		  AND m.perms = 'workflow:alert'
+		  and uf.user_id = u.user_id)
+		order by `rows`, num desc,u.nick_name
+	</select>
+
+	<update id="updateStageEndBatch" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update workbench_alert_info
+			set
+			is_epicycle_end = '1',
+			is_reappear = '0'
+			where id = #{item.id,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+
+	<!--   查询可分配任务，1：一线包含未分配的、撤回的、和忽略可分配的，2二线包含忽略可分配的 -->
+	<select id="selectNotAssignAlert" parameterType="String" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT
+		t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
+		t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
+		t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
+		IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time,
+		GROUP_CONCAT(u.user_id) user_id,COUNT(u.user_id) count,u2.user_id old_user_id,su.nick_name old_user_name
+		from workbench_alert_info t
+		LEFT JOIN workbench_alert_user u on u.alert_id = t.id and t.stage = u.stage and u.status <![CDATA[<>]]> 8
+		LEFT JOIN workbench_alert_user u2 on u2.id = t.alert_user_id
+		LEFT JOIN sys_user su on su.user_id = u2.user_id
+		where t.is_close = '0' and t.is_del = '0'
+		<if test="analyst == 'one_line'">
+			and t.is_night = #{isNight,jdbcType=VARCHAR}
+			and (t.`status` = '1' or (t.`status` in ('3','6','8') and t.is_reappear = '1'))
+			and t.stage &lt; '4'
+		</if>
+		<if test="analyst == 'two_line'">
+			and t.stage &gt;= '4' and t.`status` in ('3','6','8') and t.is_reappear = '1'
+		</if>
+		GROUP BY t.id
+		ORDER BY t.stage desc,count desc,t.important_level desc, t.create_time, t.alert_no
+	</select>
+
+	<select id="selectNeedNoticeAlert" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT GROUP_CONCAT(ba.id) id,GROUP_CONCAT(a.title) title
+		from (
+				 SELECT
+					 au.id,
+					 au.alert_id,
+					 au.user_id,
+					 au.assign_time,
+					 au.status,
+					 au.stage,
+					 au.assign_id,
+					 au.notice_type,
+					 au.assign_time start_time,
+					 now() end_time
+				 from workbench_alert_user au
+				 where au.status = '2'
+				   and au.new_night_send = '0'
+			 ) ba
+				 INNER JOIN workbench_alert_info a on ba.alert_id = a.id and a.is_close = '0' and a.is_night = '1'
+	</select>
+
+	<select id="selectCountByToday" parameterType="java.lang.String" resultType="int">
+		select count(id) from s_workday_spot where workday = #{today, jdbcType=VARCHAR}
+	</select>
+
+	<select id="getNoticeAlerts" resultType="java.util.Map" parameterType="java.util.Map">
+		SELECT t.userId,t.email,t.mobilePhoneNo,t.userName,t.userType,t.sendType,
+		GROUP_CONCAT(t.id) id,
+		GROUP_CONCAT(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) SEPARATOR '#_ssp_#') title,
+		count(1) count,
+		GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
+		GROUP_CONCAT(IF(t.countType = '1',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title1,
+		SUM(IF(t.countType = '1',1,0)) count1,
+		GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
+		GROUP_CONCAT(IF(t.countType = '2',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title2,
+		SUM(IF(t.countType = '2',1,0)) count2,
+		GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
+		GROUP_CONCAT(IF(t.countType = '3',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title3,
+		SUM(IF(t.countType = '3',1,0)) count3
+		from (
+		SELECT al.id,al.title,
+		al.description,al.priority,al.dev_ip,
+		al.email,al.userId,al.userName,al.notice_type,al.stage,al.mobilePhoneNo,al.sendType,al.userType,
+		CASE when count &lt;= ${secondInterval} then '1'
+		when count &gt; ${secondInterval} and count &lt;= ${thirdInterval} then '2'
+		when count &gt; ${thirdInterval} then '3' else '' end as countType
+		from (
+		SELECT ba.id,a.title,
+		a.description,sd.dict_label priority,a.dev_ip,
+		u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
+		CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+		case WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') &gt; DATE_FORMAT(ba.end_time, '%Y-%m-%d') then 0
+		WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') = DATE_FORMAT(ba.end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time)
+		ELSE TIMESTAMPDIFF(MINUTE, ba.start_time, CONCAT( DATE_FORMAT(ba.start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(ba.end_time, '%T'))) +
+		( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; ba.start_time AND CAST(workday as datetime) &lt; ba.end_time ) * #{timeDifference} end count
+		from (
+		SELECT
+		au.id,
+		au.alert_id,
+		au.user_id,
+		au.assign_time,
+		au.status,
+		au.stage,
+		au.assign_id,
+		au.notice_type,
+		IF(w1.id is NULL,(SELECT CONCAT(MIN(workday),#{workBeginTime}) from s_workday WHERE workday &gt; au.start_time_),au.start_time_) start_time,
+		IF(w2.id is NULL,(SELECT CONCAT(MAX(workday),#{workEndTime}) from s_workday WHERE workday &lt; au.end_time_),au.end_time_) end_time
+		from
+		(SELECT *,
+		CASE WHEN assign_time &lt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime})
+		WHEN  assign_time &gt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(assign_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+		ELSE assign_time END as start_time_,
+		CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
+		WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+		ELSE now() END as end_time_
+		from workbench_alert_user
+		where status = '2') au
+		LEFT JOIN s_workday w1 on w1.workday = DATE_FORMAT(au.start_time_, '%Y-%m-%d')
+		LEFT JOIN s_workday w2 on w2.workday = DATE_FORMAT(au.end_time_, '%Y-%m-%d')
+		) ba
+		INNER JOIN workbench_alert_info a on ba.alert_id = a.id and a.is_close = '0' and a.is_del = '0' <if test="nightFlg == 1">and a.is_night = '0'</if>
+		INNER JOIN sys_user u on ba.user_id = u.user_id
+		left join s_user_send_type st on st.user_id = u.user_id
+		LEFT JOIN sys_dict_data sd ON sd.dict_value = a.priority and sd.dict_type = 'alert_level' and sd.status = '1'
+		HAVING count &gt; ${firstInterval}
+		<if test="nightFlg == 1">
+			union
+			SELECT ba.id,a.title,
+			a.description,dd.dict_label priority,a.dev_ip,
+			u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
+			CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+			TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time) count
+			from (
+			SELECT
+			au.id,
+			au.alert_id,
+			au.user_id,
+			au.assign_time,
+			au.status,
+			au.stage,
+			au.assign_id,
+			au.notice_type,
+			au.assign_time start_time,
+			now() end_time
+			from workbench_alert_user au
+			where status = '2'
+			) ba
+			INNER JOIN workbench_alert_info a on ba.alert_id = a.id and a.is_close = '0' and a.is_night = '1'
+			INNER JOIN sys_user u on ba.user_id = u.user_id
+			left join s_user_send_type st on st.user_id = u.user_id
+			LEFT JOIN sys_dict_data dd ON dd.dict_value = a.priority and dd.dict_type = 'alert_level' and dd.status = '1'
+			HAVING count &gt; ${firstInterval}
+		</if>
+		) al
+		HAVING countType != al.notice_type or al.notice_type is NULL
+		) t
+		where 1=1
+		<if test="stage == null or stage == ''">
+			and t.stage BETWEEN 1 AND 3
+		</if>
+		<if test="stage == 4">
+			and t.stage >= '4'
+		</if>
+		GROUP BY t.userId
+	</select>
+
+	<select id="selectMayEndInfosByAlertUserId" parameterType="String" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT DISTINCT ai.id,ai.title,ai.priority,ai.dev_ip,ai.description,ai.stage,ai.is_epicycle_end,ai.is_reappear,wu.id workbenchAlertUserId
+		FROM workbench_alert_info ai
+		LEFT JOIN workbench_alert_user wu ON ai.id = wu.alert_id AND ai.stage = wu.stage
+		WHERE
+			wu.id in (${_parameter})
+		GROUP BY ai.id
+	</select>
+
+	<select id="selectNowDutyUserCount" resultType="java.lang.Integer">
+		SELECT COUNT(DISTINCT wt.executor_id) FROM workbench_schedule_task wt
+		WHERE (NOW() BETWEEN wt.begain_time AND wt.end_time) and wt.status = '1' and wt.type = '1'
+		AND EXISTS(
+			SELECT
+				*
+			FROM
+				sys_user_role uf,
+				sys_role_menu fm,
+				sys_menu m
+			WHERE
+				uf.role_id = fm.role_id
+			  AND fm.menu_id = m.menu_id
+			  and m.`status` = '1'
+			  AND m.perms = 'workflow:alert'
+			  and uf.user_id = wt.executor_id
+		)
+	</select>
+
+	<select id="selectCanDistributeUserCount" resultType="java.lang.Integer">
+		SELECT COUNT(DISTINCT u.user_id) FROM sys_user u WHERE u.status = '1' and
+			EXISTS (SELECT 1 FROM sys_user_role uf, sys_role_menu fm, sys_menu m
+					WHERE uf.role_id = fm.role_id AND fm.menu_id = m.menu_id
+					AND m.`status` = '1' AND m.perms = 'workflow:alert' AND uf.user_id = u.user_id )
+			AND EXISTS (
+				SELECT '' FROM workbench_schedule_task wt WHERE wt.status = '1' and wt.executor_id = u.user_id AND (NOW() BETWEEN wt.begain_time AND wt.end_time)
+			)
+			AND NOT EXISTS (
+				SELECT 1 FROM workbench_alert_user au WHERE au.user_id = u.user_id AND au.alert_id = #{id,jdbcType=VARCHAR}
+				and au.stage = (SELECT ai.stage FROM workbench_alert_info ai WHERE ai.id = #{id,jdbcType=VARCHAR})
+			)
+	</select>
+
+	<update id="rebackAlerts" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update workbench_alert_info ai
+			set
+			ai.status = '6',
+			ai.is_epicycle_end = #{item.isEpicycleEnd},
+			ai.is_reappear = #{item.isReappear},
+			ai.last_time = now()
+			where ai.id = #{item.id};
+
+			update workbench_alert_user set status = '6' where id = #{item.workbenchAlertUserId}
+		</foreach>
+	</update>
+
+	<select id="selectNoAssignPersonAlert" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo" resultType="java.util.Map">
+		select GROUP_CONCAT(a.id) id, GROUP_CONCAT(a.title separator '、') title, count(1) count,GROUP_CONCAT(CONCAT_WS('@_ssp_@',a.title,a.priority,a.dev_ip,a.description) SEPARATOR '#_ssp_#' ) Space1
+		from (
+			SELECT ai.id,ai.title,ai.priority,ai.dev_ip,ai.description,if(
+			(
+				SELECT COUNT(1)
+				FROM sys_user u
+				WHERE u.status = '1' and
+				EXISTS (
+					SELECT 1 FROM sys_user_role uf, sys_role_menu fm, sys_menu m WHERE uf.role_id = fm.role_id AND fm.menu_id = m.menu_id
+					AND m.`status` = '1' AND m.perms = 'workflow:alert' AND uf.user_id = u.user_id
+				)
+				/*AND EXISTS(
+					SELECT '' FROM workbench_schedule_task wt WHERE wt.status = '1' and wt.executor_id = u.user_id AND (NOW() BETWEEN wt.begain_time AND wt.end_time)
+				)*/
+				AND EXISTS (
+					SELECT 1 FROM workbench_alert_user au1 WHERE au1.user_id = u.user_id AND au1.alert_id = ai.id and au1.stage = ai.stage
+				)
+			) >= #{num,jdbcType=INTEGER},'Y','N') flg
+			from workbench_alert_user au
+			INNER JOIN workbench_alert_info ai ON ai.id = au.alert_id
+			where au.id in
+			<foreach collection="array" item="item" open="(" separator="," close=")">
+				#{item,jdbcType=VARCHAR}
+			</foreach>
+		) a
+		where
+		<if test="num > '0'.toString()">
+			a.flg = 'Y'
+		</if>
+		<if test="num lte '0'.toString()">
+			a.flg = 'N'
+		</if>
+	</select>
+
+	<select id="selectMayEndInfosById" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		SELECT ai.id,ai.title,ai.stage,ai.is_epicycle_end,ai.is_reappear
+		FROM workbench_alert_info ai
+		LEFT JOIN workbench_alert_user wu ON ai.id = wu.alert_id AND ai.stage = wu.stage
+		WHERE
+		ai.id in
+		<foreach collection="array" item="item" open="(" separator="," close=")">
+			#{item,jdbcType=VARCHAR}
+		</foreach>
+		GROUP BY ai.id
+	</select>
+
+    <select id="getNotFinishCount" resultType="java.lang.Integer">
+		SELECT COUNT(1) from workbench_alert_info i where i.`status` != '0' and i.is_close = '0' and is_epicycle_end = '0'
+	</select>
+
+	<select id="assessmentTaskNotice" parameterType="java.util.Map" resultType="java.util.Map">
+		SELECT
+			ROUND(SUM(CASE WHEN i.`status` = '1' THEN 1 WHEN i.`status` = '2' THEN 0.5 ELSE 0 END)) as notFinish,
+			ROUND(IFNULL((SELECT COUNT(1)/COUNT(DISTINCT u.user_id) from workbench_alert_user u where u.end_time &gt;= STR_TO_DATE(#{workBeginTime,jdbcType=VARCHAR},'%Y-%m-%d %T') and u.end_time &lt;= STR_TO_DATE(#{noticeTime,jdbcType=VARCHAR},'%Y-%m-%d %T') and u.`status` != '2'),0)) finish,
+			TIMESTAMPDIFF(MINUTE, STR_TO_DATE(#{workBeginTime,jdbcType=VARCHAR},'%Y-%m-%d %T'), STR_TO_DATE(#{noticeTime,jdbcType=VARCHAR},'%Y-%m-%d %T')) previousTime,
+			TIMESTAMPDIFF(MINUTE, STR_TO_DATE(#{noticeTime,jdbcType=VARCHAR},'%Y-%m-%d %T'), STR_TO_DATE(#{workEndTime,jdbcType=VARCHAR},'%Y-%m-%d %T')) afterTime
+		FROM
+			workbench_alert_info i
+	</select>
+
+	<select id="selectEventAlertRepeat" resultType="com.starso.job.modules.alert.domain.EventAlertRepeatNotice">
+		SELECT COUNT(1) count,GROUP_CONCAT(e.id) eventId,GROUP_CONCAT(CONCAT('“#Case',e.event_no,'-',e.title,'”') separator '、') eventTitle,
+			a.title,a.description,a.dev_ip devIp,a.priority
+		FROM `event` e
+			INNER JOIN (
+				SELECT ea.event_id,ai.title,ai.description,ai.dev_ip,ai.priority,ai.csrcip,ai.cdstip from event_alerts ea ,workbench_alert_info ai
+				where ea.`status` = '1' and ea.source_id = '1' and ai.is_close = '0' and ai.`status` != '0' and ea.alert_id = ai.id
+			) a ON e.id = a.event_id
+		where e.`status` = '1' and e.is_close = '0'
+		GROUP BY a.title,a.description,a.dev_ip,a.priority,a.csrcip,a.cdstip
+		HAVING count > 1
+	</select>
+
+	<select id="selectNoticedEventAlertRepeat" parameterType="com.starso.job.modules.alert.domain.EventAlertRepeatNotice" resultType="com.starso.job.modules.alert.domain.EventAlertRepeatNotice">
+		SELECT id, event_id eventId, title, priority, dev_ip devIp, description, DATE_FORMAT(create_time,'%Y-%m-%d %T') createTimeStr
+		from event_alert_repeat_notice
+		where title = #{title,jdbcType=VARCHAR}
+		  and priority = #{priority,jdbcType=VARCHAR}
+		  and dev_ip = #{devIp,jdbcType=VARCHAR}
+		  and description = #{description,jdbcType=VARCHAR}
+	</select>
+
+	<insert id="insertEventAlertRepeatBatch" parameterType="java.util.List">
+		insert into event_alert_repeat_notice (id, event_id, title, priority ,dev_ip ,description ,create_time)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(MD5(UUID()), #{item.eventId,jdbcType=VARCHAR}, #{item.title,jdbcType=VARCHAR}, #{item.priority,jdbcType=VARCHAR},
+			#{item.devIp,jdbcType=VARCHAR}, #{item.description,jdbcType=VARCHAR}, now())
+		</foreach>
+	</insert>
+
+	<select id="selectUnMatchingMul" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		select
+			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
+			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
+			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
+			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time
+		,t.is_epicycle_end,t.is_reappear,t.alert_id
+		from workbench_alert_info t
+		where t.is_matching_mul = '0' and t.status <![CDATA[<>]]> '0'
+	</select>
+
+	<update id="updateMultiInfoBatch" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update workbench_alert_info
+			set
+			threat_score = #{item.threatScore,jdbcType=INTEGER},
+			categories = #{item.categories,jdbcType=VARCHAR},
+			reverse_domains = #{item.reverseDomains,jdbcType=VARCHAR},
+			location = #{item.location,jdbcType=VARCHAR},
+			reason = #{item.reason,jdbcType=VARCHAR},
+			is_matching_mul = '1'
+			where alert_id = #{item.alertId,jdbcType=VARCHAR};
+
+			update workbench_alert_customer_info
+			set
+			threat_score = #{item.threatScore,jdbcType=INTEGER},
+			categories = #{item.categories,jdbcType=VARCHAR},
+			reverse_domains = #{item.reverseDomains,jdbcType=VARCHAR},
+			location = #{item.location,jdbcType=VARCHAR},
+			reason = #{item.reason,jdbcType=VARCHAR}
+			where alert_id = #{item.alertId,jdbcType=VARCHAR}
+		</foreach>
+	</update>
+
+	<select id="getNoAlertSpace" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+		select
+			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
+			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
+			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
+			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time
+		from workbench_alert_info t
+		order by t.get_time desc
+		limit 1
+	</select>
+
+    <select id="getAlertAllAmount" resultType="java.lang.Integer" parameterType="java.util.Date">
+		select sum(count)  count from (
+			select  count(1) count from (
+				select alert_id,stage,min(assign_time)  assign_time from   workbench_alert_user wau
+				group by alert_id,stage
+			)t where  assign_time > #{startTime,jdbcType=TIMESTAMP} and assign_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+			union all
+			select count(1) count from workbench_alert_info
+			where get_time > #{startTime,jdbcType=TIMESTAMP} and get_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+			and status='1'
+		)t
+	</select>
+
+	<select id="getAlertLevelAmount" resultType="java.util.HashMap" parameterType="java.util.Date">
+		select priority,sum(count) count from (
+			select  case when priority=1 or priority=2 then  '低危'
+			when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end priority,
+			count(1) count,t.priority `level`
+			from (
+			select wai.title,wai.priority,wau.alert_id,wau.stage,min(wau.assign_time)  assign_time from   workbench_alert_user wau
+			inner join workbench_alert_info wai on wau.alert_id = wai.id
+			group by wau.alert_id,wau.stage
+			)t
+			where  t.assign_time > #{startTime,jdbcType=TIMESTAMP} and t.assign_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+			group by case when priority=1 or priority=2 then  '低危'
+			when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end
+
+			union all
+
+			select
+			case when priority=1 or priority=2 then  '低危'
+			when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end priority ,count(1) count,priority `level`
+			from workbench_alert_info
+			where get_time > #{startTime,jdbcType=TIMESTAMP} and get_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+			and status='1'
+			group by case when priority=1 or priority=2 then  '低危'
+			when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end
+			) t
+		group by priority
+		ORDER BY `level` desc
+	</select>
+
+	<select id="getReportAlertDetail" resultType="java.lang.String" parameterType="java.util.Date">
+		select GROUP_CONCAT(concat(name,count,"次")) name from (
+		  select name,sum(count) count from (
+			  select  concat(title,' ( ' ,case when priority=1 or priority=2 then  '低危'
+			  when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end,' ) ') name,count(1) count,priority `level`
+			  from (
+			  select wai.title,wai.priority,wau.alert_id,wau.stage,min(wau.assign_time)  assign_time from   workbench_alert_user wau
+			  inner join workbench_alert_info wai on wau.alert_id = wai.id
+			  group by wau.alert_id,wau.stage
+			  )t where  assign_time > #{startTime,jdbcType=TIMESTAMP} and assign_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+			  group by  concat(title,' ( ' ,case when priority=1 or priority=2 then  '低危'
+			  when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end,' ) ')
+
+			  union all
+
+			  select
+			  concat(title,' ( ' ,case when priority=1 or priority=2 then  '低危'
+			  when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end,' ) ') name,count(1) count,priority `level`
+			  from workbench_alert_info
+			  where get_time > #{startTime,jdbcType=TIMESTAMP} and get_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+			  and status='1'
+			  group by
+			  concat(title,' ( ' ,case when priority=1 or priority=2 then  '低危'
+			  when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end,' ) ')
+
+			  )t
+		  group by name
+		  ORDER BY count DESC
+	  )t
+	</select>
+
+	<select id="selectAlreadyDistributeUserCount" resultType="java.lang.Integer">
+		SELECT COUNT(wu.user_id) count
+		FROM workbench_alert_info ai
+		LEFT JOIN workbench_alert_user wu ON ai.id = wu.alert_id AND ai.stage = wu.stage
+		WHERE ai.id = #{id,jdbcType=VARCHAR}
+	</select>
+
+	<select id="getNoticeAlertsFollow" resultType="java.util.Map">
+		SELECT t.userId,t.email,t.mobilePhoneNo,t.userName,t.userType,t.sendType,
+		GROUP_CONCAT(t.id) id,
+		GROUP_CONCAT(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) SEPARATOR '#_ssp_#') title,
+		count(1) count,
+		GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
+		GROUP_CONCAT(IF(t.countType = '1',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title1,
+		SUM(IF(t.countType = '1',1,0)) count1,
+		GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
+		GROUP_CONCAT(IF(t.countType = '2',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title2,
+		SUM(IF(t.countType = '2',1,0)) count2,
+		GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
+		GROUP_CONCAT(IF(t.countType = '3',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title3,
+		SUM(IF(t.countType = '3',1,0)) count3
+		from (
+		SELECT al.id,al.title,
+		al.description,al.priority,al.dev_ip,
+		al.email,al.userId,al.userName,al.notice_type,al.stage,al.mobilePhoneNo,al.sendType,al.userType,
+		CASE when count &lt;= ${secondInterval} then '1'
+		when count &gt; ${secondInterval} and count &lt;= ${thirdInterval} then '2'
+		when count &gt; ${thirdInterval} then '3' else '' end as countType
+		from (
+		SELECT ba.id,a.title,
+		a.description,sd.dict_label priority,a.dev_ip,
+		u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
+		CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+		case WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') &gt; DATE_FORMAT(ba.end_time, '%Y-%m-%d') then 0
+		WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') = DATE_FORMAT(ba.end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time)
+		ELSE TIMESTAMPDIFF(MINUTE, ba.start_time, CONCAT( DATE_FORMAT(ba.start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(ba.end_time, '%T'))) +
+		( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; ba.start_time AND CAST(workday as datetime) &lt; ba.end_time ) * #{timeDifference} end count
+		from (
+		SELECT
+		au.id,
+		au.alert_id,
+		au.user_id,
+		au.assign_time,
+		au.status,
+		au.stage,
+		au.assign_id,
+		au.notice_type,
+		au.start_time_ start_time,
+		au.end_time_ end_time
+		from
+		(SELECT *,
+		CASE WHEN assign_time &lt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime})
+		WHEN  assign_time &gt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(assign_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+		ELSE assign_time END as start_time_,
+		CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
+		WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+		ELSE now() END as end_time_
+		from workbench_alert_user
+		where status = '2') au
+		) ba
+		INNER JOIN workbench_alert_info a on ba.alert_id = a.id and a.is_close = '0' and a.is_del = '0' <if test="nightFlg == 1">and a.is_night = '0'</if>
+		INNER JOIN sys_user u on ba.user_id = u.user_id
+		left join s_user_send_type st on st.user_id = u.user_id
+		LEFT JOIN sys_dict_data sd ON sd.dict_value = a.priority and sd.dict_type = 'alert_level' and sd.status = '1'
+		HAVING count &gt; ${firstInterval}
+		<if test="nightFlg == 1">
+			union
+			SELECT ba.id,a.title,
+			a.description,dd.dict_label priority,a.dev_ip,
+			u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
+			CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+			TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time) count
+			from (
+			SELECT
+			au.id,
+			au.alert_id,
+			au.user_id,
+			au.assign_time,
+			au.status,
+			au.stage,
+			au.assign_id,
+			au.notice_type,
+			au.assign_time start_time,
+			now() end_time
+			from workbench_alert_user au
+			where status = '2'
+			) ba
+			INNER JOIN workbench_alert_info a on ba.alert_id = a.id and a.is_close = '0' and a.is_night = '1'
+			INNER JOIN sys_user u on ba.user_id = u.user_id
+			left join s_user_send_type st on st.user_id = u.user_id
+			LEFT JOIN sys_dict_data dd ON dd.dict_value = a.priority and dd.dict_type = 'alert_level' and dd.status = '1'
+			HAVING count &gt; ${firstInterval}
+		</if>
+		) al
+		HAVING countType != al.notice_type or al.notice_type is NULL
+		) t
+		where 1=1
+		<if test="stage == null or stage == ''">
+			and t.stage BETWEEN 1 AND 3
+		</if>
+		<if test="stage == 4">
+			and t.stage >= '4'
+		</if>
+		GROUP BY t.userId
+	</select>
+
+</mapper>

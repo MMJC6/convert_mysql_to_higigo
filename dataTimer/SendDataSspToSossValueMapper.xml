@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.dataTimer.mapper.SendDataSspToSossValueMapper">
+  <resultMap id="BaseResultMap" type="com.starso.system.api.domain.SendDataSspToSossValue">
+    <id column="customer_id" jdbcType="VARCHAR" property="customerId" />
+    <result column="param_type" jdbcType="VARCHAR" property="paramType" />
+    <result column="param_value" jdbcType="VARCHAR" property="paramValue" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime"  />
+  </resultMap>
+  <sql id="Base_Column_List">
+    customer_id, param_type, param_value, update_time
+  </sql>
+
+  <select id="selectAllServiceStatus" resultMap="BaseResultMap">
+    SELECT
+        sr.shortname param_type,
+        ( SELECT STATUS FROM s_monitor_status s WHERE s.time = max( st.time ) AND s.shortname = st.shortname ) param_value
+    FROM
+        s_monitor_resources sr
+        INNER JOIN s_monitor_status st ON sr.shortname = st.shortname
+    WHERE
+        sr.ENABLE = '1'
+    GROUP BY
+        sr.shortname
+
+        union all
+
+    SELECT
+        'DaiQueRenZhiChanShuLiang' param_type,
+        count( 1 ) param_value
+    FROM
+        (
+        SELECT
+            count( 1 )
+        FROM
+            workbench_assets t
+        WHERE
+            ( t.`status` = '1' OR t.`status` = '6' OR t.`status` = '8' )
+        GROUP BY
+            t.ip_uuid,
+        t.ip
+        ) a
+  </select>
+</mapper>

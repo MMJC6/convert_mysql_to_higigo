@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.license.mapper.LicenseMapper" >
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.license.domain.License" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="login_code" property="loginCode" jdbcType="VARCHAR" />
+    <result column="license_code" property="licenseCode" jdbcType="VARCHAR" />
+    <result column="status" property="status" jdbcType="CHAR" />
+    <result column="create_by" property="createBy" jdbcType="VARCHAR" />
+    <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+    <result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />
+    <result column="update_by" property="updateBy" jdbcType="VARCHAR" />
+    <result column="nowDate" property="nowDate" jdbcType="TIMESTAMP" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, login_code, license_code, status, create_by, create_time, update_time, update_by
+  </sql>
+  <select id="selectPageOne" resultMap="BaseResultMap" parameterType="com.starso.job.modules.license.domain.License" >
+  	select 
+    	<include refid="Base_Column_List" />,
+    	DATE_FORMAT(now(),'%Y-%m-%d %T')nowDate 
+    from s_license
+    limit 1
+  </select>
+  <select id="selectPageCount" resultType="int" parameterType="com.starso.job.modules.license.domain.License" >
+  select count(1) from(
+  	select 
+    	<include refid="Base_Column_List" />
+    from s_license
+    )basic
+  </select>
+  
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from s_license
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from s_license
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  
+  <delete id="deleteAll"  >
+    delete from s_license
+  </delete>
+  
+  <insert id="insert" parameterType="com.starso.job.modules.license.domain.License" >
+    insert into s_license (id, login_code, license_code, 
+      status, create_by, create_time,
+      update_time, update_by)
+    values (#{id,jdbcType=VARCHAR}, #{loginCode,jdbcType=VARCHAR}, #{licenseCode,jdbcType=VARCHAR}, 
+      #{status,jdbcType=CHAR}, #{createBy,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP},
+      #{updateTime,jdbcType=TIMESTAMP}, #{updateBy,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.starso.job.modules.license.domain.License" >
+    insert into s_license
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null and id != ''">
+        id,
+      </if>
+      <if test="loginCode != null and loginCode != ''">
+        login_code,
+      </if>
+      <if test="licenseCode != null and licenseCode != ''">
+        license_code,
+      </if>
+      <if test="status != null and status != ''">
+        status,
+      </if>
+      <if test="createBy != null and createBy != ''">
+        create_by,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="updateBy != null and updateBy != ''">
+        update_by,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null and id != ''">
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="loginCode != null and loginCode != ''">
+        #{loginCode,jdbcType=VARCHAR},
+      </if>
+      <if test="licenseCode != null and licenseCode != ''">
+        #{licenseCode,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null and status != ''">
+        #{status,jdbcType=CHAR},
+      </if>
+      <if test="createBy != null and createBy != ''">
+        #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null and updateBy != ''">
+        #{updateBy,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.starso.job.modules.license.domain.License" >
+    update s_license
+    <set >
+      <if test="loginCode != null and loginCode != ''">
+        login_code = #{loginCode,jdbcType=VARCHAR},
+      </if>
+      <if test="licenseCode != null and licenseCode != ''">
+        license_code = #{licenseCode,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null and status != ''">
+        status = #{status,jdbcType=CHAR},
+      </if>
+      <if test="createBy != null and createBy != ''">
+        create_by = #{createBy,jdbcType=VARCHAR},
+      </if>
+      <if test="createTime != null" >
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null" >
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateBy != null and updateBy != ''">
+        update_by = #{updateBy,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.starso.job.modules.license.domain.License" >
+    update s_license
+    set login_code = #{loginCode,jdbcType=VARCHAR},
+      license_code = #{licenseCode,jdbcType=VARCHAR},
+      status = #{status,jdbcType=CHAR},
+      create_by = #{createBy,jdbcType=VARCHAR},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP},
+      update_by = #{updateBy,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.vuln.mapper.VulnBusinessRetestMapper">
+    <resultMap id="BaseResultMap" type="com.starso.job.modules.vuln.domain.VulnBusinessRetest" >
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="vuln_business_id" property="vulnBusinessId" jdbcType="VARCHAR" />
+        <result column="result" property="result" jdbcType="VARCHAR" />
+        <result column="retest_user" property="retestUser" jdbcType="VARCHAR" />
+        <result column="retest_time" property="retestTime" jdbcType="TIMESTAMP" />
+        <result column="dis_id" property="disId" jdbcType="VARCHAR" />
+        <result column="dis_time" property="disTime" jdbcType="TIMESTAMP" />
+        <result column="dis_type" property="disType" jdbcType="CHAR" />
+        <result column="detail" property="detail" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, vuln_business_id, result, retest_user, retest_time, dis_id, dis_time,dis_type,detail
+    </sql>
+
+    <select id="selectRetestListByVulnBusinessId" resultMap="BaseResultMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from vuln_business_retest
+        where vuln_business_id = #{vulnBusinessId,jdbcType=VARCHAR}
+        order by
+        retest_time
+    </select>
+</mapper>

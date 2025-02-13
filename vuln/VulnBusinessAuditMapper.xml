@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.vuln.mapper.VulnBusinessAuditMapper">
+    <resultMap id="BaseResultMap" type="com.starso.job.modules.vuln.domain.VulnBusinessAudit" >
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="vuln_business_id" property="vulnBusinessId" jdbcType="VARCHAR" />
+        <result column="status" property="status" jdbcType="CHAR" />
+        <result column="comment" property="comment" jdbcType="VARCHAR" />
+        <result column="audit_id" property="auditId" jdbcType="VARCHAR" />
+        <result column="audit_time" property="auditTime" jdbcType="TIMESTAMP" />
+        <result column="retest_id" property="retestId" jdbcType="VARCHAR" />
+    </resultMap>
+    <sql id="Base_Column_List" >
+        id, vuln_business_id, status, comment, audit_id, audit_time, retest_id
+    </sql>
+
+    <select id="selectVulnbusinessAuditListByVulnId" resultMap="BaseResultMap" parameterType="java.lang.String" >
+        select
+        <include refid="Base_Column_List" />
+        from vuln_business_audit
+        where vuln_business_id = #{vulnBusinessId,jdbcType=VARCHAR}
+    </select>
+</mapper>

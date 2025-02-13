@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.screen.mapper.AlertZoneUnderAttackMapper">
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.screen.domain.AlertZoneUnderAttack">
+    <result column="id" jdbcType="VARCHAR" property="id" />
+    <result column="csrcip" jdbcType="VARCHAR" property="csrcip" />
+    <result column="attack_region" jdbcType="VARCHAR" property="attackRegion" />
+  </resultMap>
+
+  <sql id="Base_Column_List">
+    id, assign_id, new_time, rule_id, alert_title, alert_priority, alert_dev_ip, alert_dev_name, 
+    alert_dev_type, spare1, spare2, spare3, spare4, spare5
+  </sql>
+
+  <insert id="insertBatch" parameterType="java.util.List">
+    insert into alert_zone_under_attack (id, csrcip,attack_region)
+    values 
+    <foreach collection="list" item="item" separator=",">
+    (#{item.id,jdbcType=VARCHAR}, #{item.csrcip,jdbcType=VARCHAR}, #{item.attackRegion,jdbcType=VARCHAR})
+    </foreach>
+  </insert>
+
+  <delete id="deleteEmptiAlertZoneUnderAttackData">
+    delete from alert_zone_under_attack
+  </delete>
+
+  <delete id="deleteSeimEsUnderAttack">
+    delete from seim_es_under_attack
+  </delete>
+
+  <insert id="insertSeimEsBatch" parameterType="java.util.List">
+    insert into seim_es_under_attack (id,csrctip,country,city)
+    values
+    <foreach collection="list" item="item" separator=",">
+      (#{item.id,jdbcType=VARCHAR}, #{item.csrctip,jdbcType=VARCHAR}, #{item.country,jdbcType=VARCHAR}, #{item.city,jdbcType=VARCHAR})
+    </foreach>
+  </insert>
+
+  <select id="selectCsrctipByNowTime" resultType="com.starso.job.modules.screen.domain.SeimEsInfo">
+    SELECT
+      t.content
+    FROM
+      seim_es_info t
+    WHERE
+      t.type = 'csrcip'
+      AND t.content != ''
+      AND t.time BETWEEN unix_timestamp( DATE_SUB( now( ), INTERVAL 24 HOUR ) ) * 1000
+      AND unix_timestamp( now( ) ) * 1000
+  </select>
+
+  <select id="selectAlertByNowTime"  resultType="com.starso.job.modules.screen.domain.AlertZoneUnderAttack">
+    SELECT
+      csrcip
+    FROM
+      workbench_alert_info t
+    WHERE
+      (
+        CASE
+          WHEN create_time4 IS NOT NULL THEN
+            t.create_time4
+          WHEN create_time3 IS NOT NULL THEN
+            t.create_time3
+          WHEN create_time2 IS NOT NULL THEN
+            t.create_time2 ELSE create_time
+          END
+        )
+        BETWEEN date_sub( NOW( ), INTERVAL 24 HOUR )
+        AND now( )
+  </select>
+</mapper>

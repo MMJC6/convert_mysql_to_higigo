@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.dataTimer.mapper.SspParamValueMapper">
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.operation.domain.SParamValue">
+    <id column="param_id" jdbcType="VARCHAR" property="paramId" />
+    <result column="param_name" jdbcType="VARCHAR" property="paramName" />
+    <result column="param_value" jdbcType="VARCHAR" property="paramValue" />
+    <result column="parent_id" jdbcType="VARCHAR" property="parentId" />
+    <result column="status" jdbcType="VARCHAR" property="status" />
+    <result column="decription" jdbcType="VARCHAR" property="decription" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+  </resultMap>
+  
+  <sql id="Base_Column_List"> 
+    t.param_id,t.param_name,t.param_value,t.status,t.decription,t.parent_id,t.create_time
+  </sql>
+  
+  <select id="selectSspParamValue"  resultMap="BaseResultMap">
+    SELECT DISTINCT
+    	<include refid="Base_Column_List" />,su.user_name create_by
+    FROM s_param_value t
+    INNER JOIN sys_user su ON t.create_by = su.user_id
+    WHERE t.status = '1'
+  </select>
+
+  <select id="selectByPrimaryKey" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from s_param_value t
+    where t.param_id = #{paramId,jdbcType=VARCHAR} AND t.status = '1'
+  </select>
+</mapper>

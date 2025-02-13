@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.event.mapper.EventSamplingRecordMapper" >
+
+	<update id="updateNewSamp">
+		update event_sampling_record
+		set new_samp = 0 where new_samp = 1;
+		update event_task_sampling_record
+		set new_sampling = 0 where new_sampling = 1;
+	</update>
+
+    <select id="getSamplingAuditUsers" resultType="com.starso.system.api.domain.SysUser" parameterType="java.util.List">
+		SELECT u.user_id,u.nick_name,
+		(SELECT COUNT(1) from event_sampling_record r where u.user_id = r.audit_user_id and r.`status` = '1' and r.sampling_status = '0') `rows`
+		from sys_user u
+		where u.`status` = '1'
+		<if test="list != null">
+			and u.user_id in
+			<foreach item="item" collection="list" open="(" separator="," close=")">
+				#{item.userId,jdbcType=VARCHAR}
+			</foreach>
+		</if>
+		<if test="list == null">
+			and EXISTS(
+			select *
+			FROM sys_user s_us
+			INNER JOIN sys_user_role uf ON s_us.user_id = uf.user_id
+			INNER JOIN sys_role r ON uf.role_id = r.role_id
+			where r.role_key = 'permission:eventSampling'
+			AND s_us.`status` = '1' and  uf.user_id = u.user_id)
+		</if>
+		order by `rows`
+	</select>
+
+	<insert id="insertBatch" parameterType="java.util.List">
+		insert into event_sampling_record (id, event_id, audit_user_id,
+		sampling_status, create_by, create_time,
+		update_by, update_time, status
+		)
+		values
+		<foreach collection="list" item="item" separator=",">
+			(#{item.id,jdbcType=VARCHAR}, #{item.eventId,jdbcType=VARCHAR}, #{item.auditUserId,jdbcType=VARCHAR},
+			#{item.samplingStatus,jdbcType=VARCHAR}, #{item.createBy,jdbcType=VARCHAR}, now(),
+			#{item.updateBy,jdbcType=VARCHAR}, now(), #{item.status,jdbcType=CHAR}
+			)
+		</foreach>
+	</insert>
+
+	<insert id="insertSamplingBatch" parameterType="java.util.List">
+		insert into event_task_sampling_record (id,event_sampling_id, task_id, assignee,
+												audit_user_id, sampling_status, create_time, update_time, status)
+		select MD5(UUID()),r.id,et.id,et.assignee,r.audit_user_id,'0',r.create_time,r.create_time,'1' from event_sampling_record r
+		inner join event_task et on r.event_id = et.event_id and et.status = '1' and et.task_group = '1' and et.spot_check_status = '0' and et.is_manage_task = '0'
+		where r.new_samp = '1';
+		update event_task et set et.spot_check_status = '2'
+		where exists(
+		   select '' from event_task_sampling_record r where et.id = r.task_id and r.new_sampling = '1'
+	    );
+		update event_task_sampling_record sr set sr.status = '0'
+		where exists(
+				select '' from (SELECT id,task_id,sampling_status FROM event_task_sampling_record es WHERE es.sampling_status = '0') r
+				where sr.task_id = r.task_id and r.sampling_status = '0'
+			) and sr.sampling_status  <![CDATA[<>]]>  '0'
+	</insert>
+</mapper>

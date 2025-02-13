@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.alert.mapper.WorkbenchAlertUserMapper">
+
+    <insert id="insertBatch" parameterType="java.util.List">
+        insert into workbench_alert_user (id, alert_id, user_id,
+        assign_time, status, stage, assign_id)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id,jdbcType=VARCHAR}, #{item.alertId,jdbcType=VARCHAR}, #{item.userId,jdbcType=VARCHAR},
+            now(), #{item.status,jdbcType=CHAR}, #{item.stage,jdbcType=CHAR}, #{item.assignId,jdbcType=VARCHAR})
+        </foreach>
+    </insert>
+
+    <update id="updateNewNightBatch" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            update workbench_alert_user
+            set
+            new_night_send = '1'
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <update id="updateBatch" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            update workbench_alert_user
+            set
+            notice_type = #{item.countType,jdbcType=CHAR}
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+</mapper>

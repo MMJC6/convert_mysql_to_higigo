@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.event.mapper.EventMapper" >
+
+	<sql id="Base_Column_List">
+	  event.id,CONCAT(YEAR(event.create_time),'-',event.event_no) event_no, event.title_prefix, event.title, event.description, event.level_id, event.status, date_format(event.beagin_time,'%Y-%m-%d %T') beginTimeStr,
+      date_format(event.end_time,'%Y-%m-%d %T') endTimeStr,date_format(event.create_time,'%Y-%m-%d %T') createTimeStr,
+      event.create_by, date_format(event.update_time,'%Y-%m-%d %T') updateTimeStr, event.update_by,event.is_close,event.is_all_dept,event.is_reopen,event.template_id
+     ,event.close_reason,event.reject_reason,event.alert_user_id,event.template_type,event.espot_check_status,event.is_lock,event.event_desc,event.audit_result_num,event.audit_result_status
+	</sql>
+
+
+	<select id="selectOverTimeEvents" parameterType="com.starso.job.modules.event.domain.Event" resultType="com.starso.job.modules.event.domain.Event">
+		SELECT
+		<include refid="Base_Column_List" />
+		FROM `event` event
+		WHERE TIMESTAMPDIFF(DAY,DATE_FORMAT(event.create_time,'%Y-%m-%d'),DATE_FORMAT(NOW(), '%Y-%m-%d')) >= (SELECT param_value FROM s_param_value WHERE param_id = 'over_event_time' AND `status` = '1')
+		AND event.status = '1' AND event.is_close = '0'
+	</select>
+
+    <select id="getReportEvent" resultType="java.util.Map" parameterType="java.util.Date">
+		SELECT
+		count(DISTINCT e.id) amount,
+		GROUP_CONCAT(e.title,CASE WHEN e.is_close = '1' THEN '[已处置]' ELSE '[未处置]' END ORDER BY e.is_close DESC) title,
+		sum(CASE WHEN e.is_close = '1' THEN 1 ELSE 0 END ) alreadyClose,
+		sum(CASE WHEN e.is_close = '0' THEN 1 ELSE 0 END ) noClose
+		FROM event e
+		WHERE
+		e.create_time > #{startTime,jdbcType=TIMESTAMP}
+		AND e.create_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+		AND  e.STATUS = '1' and e.audit_result_status=4
+	</select>
+
+	<select id="getNeedAuditEvents" resultType="com.starso.system.api.domain.EventAuditResult">
+		SELECT ar.id, ar.event_id, ar.audit_result_status, ar.audit_result_num,ar.submit_time,ar.submit_user_id, ar.assign_time, ar.audit_user_id, ar.audit_time, ar.comment, ar.notice_type,e.title
+		FROM `event_audit_result` ar,event e
+		where ar.event_id=e.id and ar.audit_result_status=e.audit_result_status and ar.audit_result_num=e.audit_result_num
+		  and ar.audit_result_status in (1,5)
+		GROUP BY ar.event_id
+	</select>
+
+
+	<insert id="insertLogs" parameterType="java.util.List">
+		insert into event_operation_log (id, event_id, task_id,
+		affected_asset_id, suspicious_object_id, remark, new_msg, old_msg,
+		type, operationer, operation_time, vuln_id, alarm_report_id,event_audit_result_id)
+		values
+		<foreach collection="list" item="item" index="index" separator=",">
+			(#{item.id,jdbcType=VARCHAR}, #{item.eventId,jdbcType=VARCHAR},#{item.taskId,jdbcType=VARCHAR},
+			#{item.affectedAssetId,jdbcType=VARCHAR}, #{item.suspiciousObjectId,jdbcType=VARCHAR}, #{item.remark,jdbcType=VARCHAR},
+			<if test="item.newMsg != null">
+				#{item.newMsg,jdbcType=VARCHAR},
+			</if>
+			<if test="item.newMsg == null">
+				'',
+			</if>
+			<if test="item.oldMsg != null">
+				#{item.oldMsg,jdbcType=VARCHAR},
+			</if>
+			<if test="item.oldMsg == null">
+				'',
+			</if>
+			#{item.type,jdbcType=CHAR}, #{item.operationer,jdbcType=VARCHAR},now(),
+			#{item.vulnId,jdbcType=VARCHAR}, #{item.alarmReportId,jdbcType=VARCHAR},  #{item.eventAuditResultId,jdbcType=VARCHAR})
+		</foreach>
+	</insert>
+	<insert id="updateAuditResults" parameterType="java.util.List">
+		<foreach collection="list" item="item" index="index" separator=";" close=";">
+			INSERT INTO event_audit_result(id,event_id,audit_result_status,audit_result_num,submit_time,submit_user_id,assign_time, audit_user_id)
+			VALUES(
+			#{item.id,jdbcType=VARCHAR},#{item.eventId,jdbcType=VARCHAR},#{item.auditResultStatus,jdbcType=VARCHAR},#{item.auditResultNum,jdbcType=INTEGER},
+			#{item.submitTime,jdbcType=TIMESTAMP},#{item.submitUserId,jdbcType=VARCHAR},#{item.assignTime,jdbcType=TIMESTAMP},#{item.auditUserId,jdbcType=VARCHAR}
+			) ON DUPLICATE KEY
+			update audit_result_status=#{item.auditResultStatus,jdbcType=INTEGER},
+			        assign_time=#{item.assignTime,jdbcType=TIMESTAMP},
+			        audit_user_id=#{item.auditUserId,jdbcType=VARCHAR}
+		</foreach>
+	</insert>
+	<update id="updateAuditStaus" parameterType="java.util.List">
+		<foreach collection="list" item="item" separator=";">
+			update event ai
+			set
+			ai.audit_result_status = 2
+			where ai.id = #{item}
+		</foreach>
+	</update>
+
+	<update id="updateUndutyAuditEvents">
+		UPDATE event t,event_audit_result wu SET t.`audit_result_status` = 5 , wu.`audit_result_status` = 5
+		WHERE t.id = wu.event_id AND t.`audit_result_status` = 2 AND wu.`audit_result_status` = 2 AND NOT EXISTS (
+			SELECT '' FROM workbench_schedule_task wt WHERE wu.audit_user_id = wt.executor_id AND (now() BETWEEN wt.begain_time AND wt.end_time)
+		  and wt.status = 1 and wt.type = 1
+			)
+	</update>
+</mapper>

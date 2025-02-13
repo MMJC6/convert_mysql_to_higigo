@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.dataTimer.mapper.SspWorkbenchAlertUserMapper">
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.alert.domain.WorkbenchAlertUser">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="alert_id" jdbcType="VARCHAR" property="alertId" />
+    <result column="user_id" jdbcType="VARCHAR" property="userId" />
+    <result column="assign_time" jdbcType="TIMESTAMP" property="assignTime" />
+    <result column="status" jdbcType="CHAR" property="status" />
+    <result column="stage" jdbcType="CHAR" property="stage" />
+    <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
+    <result column="notice_type" jdbcType="VARCHAR" property="noticeType" />
+    <result column="misreport_reason" jdbcType="VARCHAR" property="misreportReason" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    u.id, u.alert_id,u.assign_time, u.status, u.stage, u.end_time,u.notice_type,u.misreport_reason
+  </sql>
+  <select id="selectSspWorkbenchAlertUser" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertUser" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />,su.user_name user_id
+    from workbench_alert_user u
+    INNER JOIN sys_user su ON u.user_id = su.user_id AND su.status = '1'
+    <if test="endTime != null">
+    	where IFNULL(end_time,assign_time) >= #{endTime,jdbcType=TIMESTAMP}
+    </if>
+  </select>
+
+</mapper>

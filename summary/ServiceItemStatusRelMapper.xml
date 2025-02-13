@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.summary.mapper.ServiceItemStatusRelMapper">
+    
+    <resultMap type="com.starso.system.api.domain.ServiceItemStatusRel" id="BaseResult">
+        <result property="id"    column="id"    />
+        <result property="serviceSituat"    column="service_situat"    />
+        <result property="serviceStatus"    column="service_status"    />
+        <result property="serviceScore"    column="service_score"    />
+        <result property="customerId"    column="customer_id"    />
+        <result property="customerName"    column="customer_name"    />
+        <result property="createId"    column="create_id"    />
+        <result property="createTime"    column="create_time"    />
+        <result property="updateId"    column="update_id"    />
+        <result property="updateTime"    column="update_time"    />
+        <result property="status"    column="status"    />
+    </resultMap>
+
+    <sql id="BaseResultVo">
+        id,service_situat,service_status,service_score,customer_id,status,create_id,create_time,update_id,update_time
+    </sql>
+
+
+    <select id="selectByCustomerId" parameterType="java.lang.String" resultMap="BaseResult">
+        select rel.*,sc.name customer_name from service_item_status_rel rel
+        left join s_customer sc on rel.customer_id=sc.id and sc.status='1'
+        where rel.customer_id=#{customerId} and rel.status='1'
+    </select>
+
+    <select id="getServiceItemStatusList"  resultMap="BaseResult" parameterType="java.lang.String">
+        select rel.*,sc.name customer_name from service_item_status_rel rel
+        left join s_customer sc on rel.customer_id=sc.id and sc.status='1'
+        where sc.customer_no=#{customer_no} and rel.status='1'
+    </select>
+
+
+    <select id="selectServiceScoreByCustomerId" parameterType="java.lang.String" resultType="com.starso.system.api.domain.ServiceItemStatusRel">
+         select customer_name,sum(a.deduct_score) deduct_score,
+        `service_score`
+        from s_score_result a
+        left join service_item_status_rel b on a.customer_id=b.customer_id and b.`status`='1'
+        where a.customer_id =#{customerId}
+        group by a.customer_id
+    </select>
+
+
+    <insert id="insertList" parameterType="com.starso.system.api.domain.ServiceItemStatusRel">
+        insert into service_item_status_rel (id, service_situat, service_status,service_score,create_id)
+        values
+        <foreach collection="serviceItemStatusRelList" item="item" separator=",">
+            (MD5(UUID()), #{item.serviceSituat,jdbcType=VARCHAR},#{item.serviceStatus,jdbcType=VARCHAR}, #{item.serviceScore,jdbcType=VARCHAR},
+            #{item.createId})
+        </foreach>
+    </insert>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.starso.system.api.domain.ServiceItemStatusRel">
+        update service_item_status_rel
+        <set>
+            <if test="serviceSituat != null">
+                service_situat = #{serviceSituat,jdbcType=CHAR},
+            </if>
+            <if test="serviceStatus != null">
+                service_status = #{serviceStatus,jdbcType=CHAR},
+            </if>
+            <if test="serviceScore != null">
+                service_score = #{serviceScore,jdbcType=CHAR},
+            </if>
+            <if test="customerId != null">
+                customer_id = #{customerId,jdbcType=VARCHAR},
+            </if>
+            <if test="status != null">
+                status = #{status,jdbcType=CHAR},
+            </if>
+            <if test="createId != null">
+                create_id = #{createId,jdbcType=VARCHAR},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="updateId != null">
+                update_id = #{updateId,jdbcType=VARCHAR},
+            </if>
+                update_time = now(),
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+    </update>
+
+
+        <delete id="deleteAllData" >
+            delete from service_item_status_rel
+        </delete>
+
+</mapper>

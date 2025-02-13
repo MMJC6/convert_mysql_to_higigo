@@ -1,0 +1,745 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.user.mapper.SysUserMapper">
+
+    <resultMap id="AlertBaseResultMap" type="com.starso.job.modules.user.domain.SysUserVo" >
+        <id     property="userId"       column="user_id"      />
+        <result property="userName"     column="user_name"    />
+        <result property="userNo"     column="user_no"    />
+        <result property="nickName"     column="nick_name"    />
+        <result property="email"        column="email"        />
+        <result property="phonenumber"  column="phonenumber"  />
+        <result property="sex"          column="sex"          />
+        <result property="userType"     column="user_type"    />
+        <result property="userTypeText"     column="userTypeText"    />
+        <result property="avatar"       column="avatar"       />
+        <result property="password"     column="password"     />
+        <result property="status"       column="status"       />
+        <result property="loginIp"      column="login_ip"     />
+        <result property="loginDate"    column="login_date"   />
+        <result property="createBy"     column="create_by"    />
+        <result property="createTime"   column="create_time"  />
+        <result property="newTime"      column="new_time"  />
+        <result property="updateBy"     column="update_by"    />
+        <result property="updateTime"   column="update_time"  />
+        <result property="remark"       column="remark"       />
+        <result property="isLock"       column="is_lock"      />
+        <result property="companyName"  column="company_name" />
+        <result property="photoId"  column="photo_id" />
+        <result property="dataRoleName"  column="dataRoleName" />
+        <result property="sendType"  column="sendType" />
+        <collection property="alertList" ofType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
+            <result column="alert_id" property="id" jdbcType="VARCHAR" />
+            <result column="title" property="title" jdbcType="VARCHAR" />
+            <result column="priority" property="priority" jdbcType="VARCHAR" />
+            <result column="csrcip" property="csrcip" jdbcType="VARCHAR" />
+            <result column="cdstip" property="cdstip" jdbcType="VARCHAR" />
+            <result column="description" property="description" jdbcType="VARCHAR" />
+            <result column="alert_create_time" property="createTimeStr" jdbcType="VARCHAR" />
+            <result column="alert_no" property="alertNo" jdbcType="VARCHAR" />
+            <result column="dev_ip" property="devIp" jdbcType="VARCHAR" />
+            <result column="space1" property="space1" jdbcType="VARCHAR" />
+        </collection>
+        <collection property="roles" ofType="com.starso.system.api.domain.SysRole">
+            <result column="role_id" property="roleId" jdbcType="VARCHAR" />
+            <result column="role_name" property="roleName" jdbcType="VARCHAR" />
+        </collection>
+    </resultMap>
+
+    <resultMap id="BaseResultMap" type="com.starso.system.api.domain.SysUser">
+        <id     property="userId"       column="user_id"      />
+        <result property="userName"     column="user_name"    />
+        <result property="userNo"     column="user_no"    />
+        <result property="nickName"     column="nick_name"    />
+        <result property="email"        column="email"        />
+        <result property="phonenumber"  column="phonenumber"  />
+        <result property="sex"          column="sex"          />
+        <result property="userType"     column="user_type"    />
+        <result property="userTypeText"     column="userTypeText"    />
+        <result property="avatar"       column="avatar"       />
+        <result property="password"     column="password"     />
+        <result property="status"       column="status"       />
+        <result property="loginIp"      column="login_ip"     />
+        <result property="loginDate"    column="login_date"   />
+        <result property="createBy"     column="create_by"    />
+        <result property="createTime"   column="create_time"  />
+        <result property="updateBy"     column="update_by"    />
+        <result property="twoManager"   column="two_manager"  />
+        <result property="eventSampling" column="event_sampling"/>
+        <result property="updateTime"   column="update_time"  />
+        <result property="remark"       column="remark"       />
+        <result property="isLock"       column="is_lock"      />
+        <result property="companyName"  column="company_name" />
+        <result property="photoId"  column="photo_id" />
+        <result property="dataRoleName"  column="dataRoleName" />
+        <result property="sendType"  column="sendType" />
+        <result column="a_new_leave_time" property="newLeaveTime" jdbcType="TIMESTAMP" />
+        <result column="a_task_new_time" property="newTime" jdbcType="TIMESTAMP" />
+        <result column="is_soss_del" property="isSossDel" jdbcType="VARCHAR" />
+        <collection property="roles" ofType="com.starso.system.api.domain.SysRole">
+            <result column="role_id" property="roleId" jdbcType="VARCHAR" />
+            <result column="role_name" property="roleName" jdbcType="VARCHAR" />
+        </collection>
+        <collection property="workbenchScheduleTaskList" ofType="com.starso.system.api.domain.TbWorkbenchScheduleTask">
+            <result column="task_id" property="id" jdbcType="VARCHAR" />
+            <result column="task_title" property="title" jdbcType="VARCHAR" />
+            <result column="task_description" property="description" jdbcType="VARCHAR" />
+            <result column="task_begain_time" property="begainTime" jdbcType="VARCHAR" />
+            <result column="task_end_time" property="endTime" jdbcType="VARCHAR" />
+            <result column="task_level" property="level" jdbcType="VARCHAR" />
+            <result column="task_status" property="status" jdbcType="VARCHAR" />
+            <result column="detail_report_name" property="detailReportName" jdbcType="VARCHAR" />
+            <result column="task_group" property="taskGroup" jdbcType="VARCHAR" />
+            <result column="task_type" property="type" jdbcType="VARCHAR" />
+            <result column="cycle_type" property="cycleType" jdbcType="VARCHAR" />
+            <result column="cycle_user_defined_type" property="cycleUserDefinedType" jdbcType="VARCHAR" />
+            <result column="cycle_interval" property="cycleInterval" jdbcType="VARCHAR" />
+            <result column="cycle_status" property="cycleStatus" jdbcType="VARCHAR" />
+            <result column="file_name" property="fileName" jdbcType="VARCHAR" />
+            <result property="createTime"   column="task_create_time"  />
+            <result property="updateTime"   column="task_update_time"  />
+            <result column="file_id" property="fileId" jdbcType="VARCHAR" />
+            <result column="file_url" property="fileUrl" jdbcType="VARCHAR" />
+            <result column="sf_status" property="sfStatus" jdbcType="VARCHAR" />
+            <result column="role_id_executor_id" property="roleIdExecutorId" jdbcType="VARCHAR" />
+            <result column="is_workday" property="isWorkday" jdbcType="VARCHAR" />
+            <result column="role_id_executor_id" property="roleIdExecutorId" jdbcType="VARCHAR" />
+            <result column="task_mother_cycle_status" property="taskMotherCycleStatus" jdbcType="VARCHAR" />
+            <result column="task_mother_status" property="taskMotherStatus" jdbcType="VARCHAR" />
+            <result column="mother_task_id" property="motherTaskId" jdbcType="VARCHAR" />
+            <result column="mother_begin_time" property="motherBeginTime" jdbcType="VARCHAR" />
+            <result column="mother_end_time" property="motherEndTime" jdbcType="VARCHAR" />
+            <result column="task_role_name" property="roleName" jdbcType="VARCHAR" />
+            <result column="is_exists_mother_task" property="isExistsMotherTask" jdbcType="VARCHAR" />
+            <result column="is_min_begain_time" property="isMinBegainTime" jdbcType="TIMESTAMP" />
+            <result column="b_new_leave_time" property="newLeaveTime" jdbcType="TIMESTAMP" />
+            <result column="b_task_new_time" property="newTime" jdbcType="TIMESTAMP" />
+            <collection property="partakeList" ofType="com.starso.system.api.domain.TbWorkbenchScheduleTaskPartake">
+                <result column="part_id" property="id" jdbcType="VARCHAR" />
+                <result column="part_user_no" property="userNo" jdbcType="VARCHAR" />
+                <result column="part_role_name" property="roleName" jdbcType="VARCHAR" />
+            </collection>
+            <collection property="taskIntervalList" ofType="com.starso.system.api.domain.TbWorkbenchScheduleTaskInterval">
+                <result column="intval_id" property="id" jdbcType="VARCHAR" />
+                <result column="intval_task_group" property="taskGroup" jdbcType="VARCHAR" />
+                <result column="intval_cycle_user_defined_type" property="cycleUserDefinedType" jdbcType="VARCHAR" />
+                <result column="intervals" property="intervals" jdbcType="VARCHAR" />
+            </collection>
+        </collection>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        s_us.user_id,
+        s_us.user_name,
+        s_us.phonenumber,
+        s_us.email,
+        s_us.sex,
+        s_us.password,
+        s_us.create_time,
+        s_us.update_by,
+        s_us.photo_id,
+        s_us.company_name,
+        s_us.update_time,
+        s_us.status,
+        s_us.create_by,
+        s_us.nick_name,
+        s_us.login_date,
+        s_us.token,
+        s_us.user_type,
+		s_us.is_lock
+    </sql>
+
+    <select id="selectByPermission" resultType="com.starso.system.api.domain.SysUser">
+        SELECT
+        <include refid="Base_Column_List" />,s_us.user_type,
+        CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,',''),IF(st.voice_status = '1','4','')) sendType
+        FROM sys_user s_us
+        INNER JOIN sys_user_role uf ON s_us.user_id = uf.user_id
+        INNER JOIN sys_role r ON uf.role_id = r.role_id
+        LEFT JOIN s_user_send_type st on st.user_id = s_us.user_id
+        where r.role_key = #{_parameter,jdbcType=VARCHAR}
+        AND s_us.`status` = '1'
+    </select>
+
+    <select id="selectNeedNoticeUsers" resultType="com.starso.system.api.domain.SysUser">
+        SELECT
+        <include refid="Base_Column_List" />,s_us.user_type,
+        CONCAT(IF(ut.wechat_status = '1','1,',''),IF(ut.phone_status = '1','2,',''),IF(ut.email_status = '1','3,','')) sendType
+        FROM sys_user s_us
+        INNER JOIN workbench_schedule_task wt ON s_us.user_id = wt.executor_id AND wt.type = 1 AND wt.`status` = 1
+        INNER JOIN sys_user_role ur ON ur.user_id = s_us.user_id
+        INNER JOIN sys_role r ON r.role_id = ur.role_id AND r.status = '1'
+        LEFT JOIN s_user_send_type ut ON s_us.user_id = ut.user_id
+        WHERE s_us.user_type = '1' AND s_us.`status` = '1' AND s_us.user_name not in ('caor','gaojing','客户分析师')
+        AND NOW() BETWEEN wt.begain_time AND wt.end_time
+        AND (r.role_key = 'permission:one' OR r.role_key = 'permission:two')
+    </select>
+
+    <select id="getUsers" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo" resultType="com.starso.system.api.domain.SysUser">
+        SELECT u.user_id,u.nick_name,u.phonenumber,u.email,IFNULL(au.count,#{count,jdbcType=INTEGER}) `rows`
+	        ,IF(wt.begain_time > DATE_FORMAT(#{workBeginTime},'%Y-%m-%d %T'),wt.begain_time,DATE_FORMAT(#{workBeginTime},'%Y-%m-%d %T')) begainTimeStr
+            ,IF(wt.end_time > DATE_FORMAT(#{workEndTime},'%Y-%m-%d %T'),DATE_FORMAT(#{workEndTime},'%Y-%m-%d %T'),wt.end_time) endTimeStr,
+            IFNULL((SELECT IFNULL(COUNT(1),0) from workbench_alert_user wau where wau.status BETWEEN 3 and 4 and u.user_id = wau.user_id),0)/au.num*8 as num
+        from sys_user u
+        LEFT JOIN (SELECT w.user_id ,(#{count,jdbcType=INTEGER} - COUNT(1)) count ,(TIMESTAMPDIFF(HOUR, MIN(w.assign_time), NOW())) num from workbench_alert_user w inner join workbench_alert_info a ON a.id = w.alert_id and a.is_del = '0' and a.`status` = '2' where w.`status` = '2' GROUP BY w.user_id ) au on u.user_id = au.user_id
+        INNER JOIN workbench_schedule_task wt ON u.user_id = wt.executor_id AND wt.type = 1 AND wt.`status` = 1
+        where u.status = '1'
+          AND (NOW() BETWEEN IF(wt.begain_time > DATE_FORMAT(#{workBeginTime},'%Y-%m-%d %T'),wt.begain_time,DATE_FORMAT(#{workBeginTime},'%Y-%m-%d %T')) AND IF(wt.end_time > DATE_FORMAT(#{workEndTime},'%Y-%m-%d %T'),DATE_FORMAT(#{workEndTime},'%Y-%m-%d %T'),wt.end_time))
+          and EXISTS(
+            SELECT
+            *
+            FROM
+            sys_user_role uf,
+            sys_role_menu fm,
+            sys_menu m
+            WHERE
+            uf.role_id = fm.role_id
+          AND fm.menu_id = m.menu_id
+          and m.`status` = '1'
+          AND m.perms = 'workflow:alert'
+          and uf.user_id = u.user_id)
+          and IFNULL(au.count,#{count,jdbcType=INTEGER}) > 0
+        order by `rows` desc, num desc,u.nick_name
+    </select>
+
+    <select id="getDutyUsers" parameterType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask" resultType="com.starso.system.api.domain.SysUser">
+        SELECT
+        DISTINCT <include refid="Base_Column_List" />,s_us.user_type,
+        CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+        DATE_FORMAT(s.begain_time,'%Y-%m-%d %T') begainTimeStr,
+        DATE_FORMAT(s.end_time,'%Y-%m-%d %T') endTimeStr
+        from workbench_schedule_task s
+        inner join sys_user s_us on s_us.user_id = s.executor_id
+        LEFT JOIN s_user_send_type st on st.user_id = s_us.user_id
+        where s_us.`status` = '1' and s.`status` = '1' and s.type = '1'
+        <if test="dutyDayArray != null">
+            and
+            <foreach item="item" collection="dutyDayArray" open="(" separator=" or " close=")">
+                s.begain_time &lt;=STR_TO_DATE(CONCAT(#{item},' 00:00:00'),'%Y-%m-%d %T') and s.end_time >= STR_TO_DATE(CONCAT(#{item},' 23:59:59'),'%Y-%m-%d %T')
+            </foreach>
+        </if>
+        <if test="dutyDayArray == null">
+            and now() BETWEEN s.begain_time AND s.end_time
+        </if>
+        and EXISTS (
+        SELECT DISTINCT f.user_id from sys_role r,sys_user_role f where f.role_id = r.role_id
+        <if test="permissionArr != null">
+            and
+            <foreach item="item" collection="permissionArr" open="(" separator=" or " close=")">
+                r.role_key = #{item}
+            </foreach>
+        </if>
+        and s.executor_id = f.user_id
+        )
+    </select>
+
+    <select id="getSecondLineUsers" parameterType="java.util.List" resultType="com.starso.system.api.domain.SysUser">
+        SELECT u.user_id,u.nick_name,IFNULL(au.count,0) `rows` ,
+        IFNULL((SELECT IFNULL(COUNT(1),0) from workbench_alert_user wau where wau.status BETWEEN 3 and 4 and u.user_id = wau.user_id),0)/au.num*8 as num
+        from sys_user u
+        LEFT JOIN (SELECT user_id ,COUNT(1) count ,(TIMESTAMPDIFF(HOUR, MIN(assign_time), NOW())) num from workbench_alert_user where `status` = '2' GROUP BY user_id ) au on u.user_id = au.user_id
+        where u.status = '1'
+        <if test="list != null">
+            and u.user_id in
+            <foreach item="item" collection="list" open="(" separator="," close=")">
+                #{item.userId,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        <if test="list == null">
+            and EXISTS(
+                SELECT
+                *
+                FROM
+                sys_user_role uf,
+                sys_role r
+                WHERE
+                uf.role_id = r.role_id
+                AND (r.role_key = 'permission:two')
+                and uf.user_id = u.user_id
+            )
+        </if>
+    </select>
+
+    <select id="getSecondLineUsersOfEventAudit" parameterType="java.util.List" resultType="com.starso.system.api.domain.SysUser">
+        SELECT u.user_id,u.nick_name,IFNULL(au.count,0) `rows` ,
+        IFNULL((SELECT IFNULL(COUNT(1),0) from event_audit_result wau where wau.audit_result_status BETWEEN 3 and 4 and u.user_id = wau.audit_user_id),0)/au.num*8 as num
+        from sys_user u
+        LEFT JOIN (SELECT audit_user_id user_id ,COUNT(1) count ,(TIMESTAMPDIFF(HOUR, MIN(assign_time), NOW())) num from event_audit_result where `audit_result_status` =2 GROUP BY user_id ) au on u.user_id = au.user_id
+        where u.status = '1'
+        <if test="list != null">
+            and u.user_id in
+            <foreach item="item" collection="list" open="(" separator="," close=")">
+                #{item.userId,jdbcType=VARCHAR}
+            </foreach>
+        </if>
+        <if test="list == null">
+            and EXISTS(
+            SELECT
+            *
+            FROM
+            sys_user_role uf,
+            sys_role r
+            WHERE
+            uf.role_id = r.role_id
+            AND (r.role_key = 'permission:two')
+            and uf.user_id = u.user_id
+            )
+        </if>
+        order by rows asc
+    </select>
+
+    <select id="selectUsersByIds" parameterType="com.starso.system.api.domain.SysUser" resultType="com.starso.system.api.domain.SysUser">
+        SELECT
+        DISTINCT <include refid="Base_Column_List" />,s_us.user_type,
+        CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType
+        FROM sys_user s_us
+        LEFT JOIN sys_user_role uf ON s_us.user_id = uf.user_id
+        LEFT JOIN sys_role_menu fm ON uf.role_id = fm.role_id
+        LEFT JOIN sys_menu m ON fm.menu_id = m.menu_id
+        LEFT JOIN s_user_send_type st on st.user_id = s_us.user_id
+        where s_us.user_id in
+        <foreach collection="idArray" item="item" open="(" close=")" separator=",">
+            #{item,jdbcType=VARCHAR}
+        </foreach>
+        AND s_us.`status` = '1'
+    </select>
+
+    <select id="selectTwoLineUser" resultType="com.starso.system.api.domain.SysUser">
+        SELECT DISTINCT u.user_id,u.`nick_name`,u.email,u.phonenumber,u.user_type,
+                        CONCAT(IF(ut.wechat_status = '1','1,',''),IF(ut.phone_status = '1','2,',''),IF(ut.email_status = '1','3,','')) sendType
+        FROM sys_user u
+        INNER JOIN workbench_schedule_task w ON u.user_id = w.executor_id
+        LEFT JOIN s_user_send_type ut ON ut.user_id = u.user_id
+        WHERE u.`status` = 1 AND w.type = 1 AND w.begain_time &lt;= NOW() AND w.end_time &gt;= NOW() AND w.status = 1
+          AND EXISTS(
+                SELECT
+                    ''
+                FROM sys_user s_us
+                LEFT JOIN sys_user_role uf ON s_us.user_id = uf.user_id
+                LEFT JOIN sys_role r ON uf.role_id = r.role_id
+                LEFT JOIN s_user_send_type st on st.user_id = s_us.user_id
+                where (r.role_key = 'permission:two')
+                  AND s_us.`status` = '1' AND s_us.user_id = u.user_id
+            )
+    </select>
+
+    <select id="selectTwoLineAllUser" resultType="com.starso.system.api.domain.SysUser">
+        SELECT DISTINCT
+        <include refid="Base_Column_List" />,s_us.user_type,
+        CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType
+        FROM sys_user s_us
+        LEFT JOIN sys_user_role uf ON s_us.user_id = uf.user_id
+        LEFT JOIN sys_role r ON uf.role_id = r.role_id
+        LEFT JOIN s_user_send_type st on st.user_id = s_us.user_id
+        where (r.role_key = 'permission:two')
+        AND s_us.`status` = '1'
+    </select>
+
+    <select id="selectTwoLineAlertList" resultMap="AlertBaseResultMap" parameterType="java.util.Map">
+        select
+        <include refid="Base_Column_List" />,s_us.user_type
+        ,al.alert_id,al.title,al.alert_no,al.priority,date_format(al.create_time, '%Y-%m-%d %T') alert_create_time,al.description,al.cdstip,al.csrcip,al.dev_ip,
+        CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+        al.jiange  Space1
+        FROM sys_user s_us
+        inner join
+        (
+        SELECT ba.*,
+        case WHEN DATE_FORMAT(start_time, '%Y-%m-%d') &gt; DATE_FORMAT(end_time, '%Y-%m-%d') then 0
+        WHEN DATE_FORMAT(start_time, '%Y-%m-%d') = DATE_FORMAT(end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, start_time, end_time)
+        ELSE TIMESTAMPDIFF(MINUTE, start_time, CONCAT( DATE_FORMAT(start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(end_time, '%T'))) +
+        ( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; start_time AND CAST(workday as datetime) &lt; end_time ) * #{timeDifference} end jiange
+        from (
+        SELECT
+        au.alert_id, au.title, au.num,au.alert_no,au.priority,au.create_time,au.description,au.cdstip,au.csrcip,au.dev_ip,au.user_id,
+        IF(w1.id is NULL,(SELECT CONCAT(MIN(workday),#{workBeginTime}) from s_workday WHERE workday &gt; au.start_time_),au.start_time_) start_time,
+        IF(w2.id is NULL,(SELECT CONCAT(MAX(workday),#{workEndTime}) from s_workday WHERE workday &lt; au.end_time_),au.end_time_) end_time
+        from
+        (SELECT
+        info.id alert_id,
+        info.title,
+        info.num,
+        info.alert_no,
+        info.priority,
+        info.create_time,
+        info.description,
+        info.cdstip,
+        info.csrcip,
+        info.dev_ip,
+        t.user_id,
+        CASE WHEN t.assign_time &lt; CONCAT(DATE_FORMAT(t.assign_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(t.assign_time, '%Y-%m-%d'),#{workBeginTime})
+        WHEN  t.assign_time &gt; CONCAT(DATE_FORMAT(t.assign_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(t.assign_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+        ELSE t.assign_time END as start_time_,
+        CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
+        WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+        ELSE now() END as end_time_
+        FROM workbench_alert_user t,
+        workbench_alert_info info
+        WHERE info.status = 2
+        AND info.is_close = '0' AND info.is_del = '0'
+        AND t.alert_id = info.id
+        AND t.status = 2
+        AND t.stage >= 4
+        AND info.is_night = '0'
+        ) au
+        LEFT JOIN s_workday w1 on w1.workday = DATE_FORMAT(au.start_time_, '%Y-%m-%d')
+        LEFT JOIN s_workday w2 on w2.workday = DATE_FORMAT(au.end_time_, '%Y-%m-%d')
+        ) ba
+        <if test="nightFlg == 1">
+            union
+            SELECT ba.*,TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time) jiange
+            from (
+            SELECT
+            info.id alert_id,
+            info.title,
+            info.num,
+            info.alert_no,
+            info.priority,
+            info.create_time,
+            info.description,
+            info.cdstip,
+            info.csrcip,
+            info.dev_ip,
+            t.user_id,
+            t.assign_time start_time,
+            now() end_time
+            FROM workbench_alert_user t,
+            workbench_alert_info info
+            WHERE info.status = 2
+            AND info.is_close = '0'
+            AND t.alert_id = info.id
+            AND t.status = 2
+            AND t.stage >= 4
+            and info.is_night = '1'
+            ) ba
+        </if>
+        ) al on s_us.user_id = al.user_id
+        LEFT JOIN s_user_send_type st ON s_us.user_id = st.user_id
+        WHERE s_us.`status` = '1' AND EXISTS(
+        SELECT '' FROM sys_user_role uf
+        LEFT JOIN sys_role r ON uf.role_id = r.role_id
+        WHERE (r.role_key = 'permission:two') AND uf.user_id = s_us.user_id
+        )
+    </select>
+
+    <select id="selectUserByFunRole" parameterType="com.starso.system.api.domain.SysRole" resultType="com.starso.system.api.domain.SysUser">
+        SELECT
+        <include refid="Base_Column_List"/>,s_us.user_type
+        FROM
+        sys_user s_us
+        INNER JOIN sys_user_role uf ON s_us.user_id = uf.user_id
+        INNER JOIN sys_role f ON f.role_id = uf.role_id AND f.`status` = '1'
+        WHERE
+        s_us.`status` = '1' AND f.role_type = #{roleType,jdbcType=VARCHAR} AND f.`role_name` = #{roleName,jdbcType=VARCHAR}
+    </select>
+
+    <select id="selectUserByUserName" parameterType="String" resultType="com.starso.system.api.domain.SysUser">
+        SELECT <include refid="Base_Column_List"/>
+        FROM
+        sys_user s_us
+        where s_us.user_name = #{userName} and s_us.status = '1'
+    </select>
+
+    <update id="updateUser" parameterType="com.starso.system.api.domain.SysUser">
+        update sys_user
+        <set>
+            <if test="isLock != null and isLock != ''">is_lock = #{isLock},</if>
+            update_time = now()
+        </set>
+        where user_id = #{userId}
+    </update>
+
+    <insert id="insertUser" parameterType="com.starso.system.api.domain.SysUser">
+        insert into sys_user
+        <trim prefix="(" suffix=")" suffixOverrides="," >
+            <if test="userId != null and userId != ''">user_id,</if>
+            user_no,
+            <if test="userName != null and userName != ''">user_name,</if>
+            <if test="nickName != null and nickName != ''">nick_name,</if>
+            <if test="userType != null and userType != ''">user_type,</if>
+            <if test="email != null and email != ''">email,</if>
+            <if test="avatar != null and avatar != ''">avatar,</if>
+            <if test="phonenumber != null and phonenumber != ''">phonenumber,</if>
+            <if test="sex != null and sex != ''">sex,</if>
+            <if test="password != null and password != ''">password,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="isLock != null and isLock != ''">is_lock,</if>
+            <if test="createBy != null and createBy != ''">create_by,</if>
+            <if test="remark != null and remark != ''">remark,</if>
+            <if test="companyName != null and companyName != ''">company_name,</if>
+            <if test="updateTime != null">update_time,</if>
+            <if test="createTime != null">create_time,</if>
+            <if test="isSend != null and isSend != ''">is_send,</if>
+            <if test="isSossDel != null and isSossDel != ''">is_soss_del,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides="," >
+            <if test="userId != null and userId != ''">#{userId},</if>
+            <if test="userNo != null and userNo != ''">#{userNo},</if>
+            <if test="userName != null and userName != ''">#{userName},</if>
+            <if test="nickName != null and nickName != ''">#{nickName},</if>
+            <if test="userType != null and userType != ''">#{userType},</if>
+            <if test="email != null and email != ''">#{email},</if>
+            <if test="avatar != null and avatar != ''">#{avatar},</if>
+            <if test="phonenumber != null and phonenumber != ''">#{phonenumber},</if>
+            <if test="sex != null and sex != ''">#{sex},</if>
+            <if test="password != null and password != ''">#{password},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="isLock != null and isLock != ''">#{isLock},</if>
+            <if test="createBy != null and createBy != ''">#{createBy},</if>
+            <if test="remark != null and remark != ''">#{remark},</if>
+            <if test="updateTime != null">#{updateTime,jdbcType=TIMESTAMP},</if>
+            <if test="createTime != null">#{createTime,jdbcType=TIMESTAMP},</if>
+            <if test="isSend != null and isSend != ''">#{isSend},</if>
+            <if test="isSossDel != null and isSossDel != ''">#{isSossDel},</if>
+        </trim>
+    </insert>
+
+    <select id="selectUserByqueryCondition" resultType="com.starso.system.api.domain.SysUser">
+            SELECT
+                s.*
+            FROM
+                sys_user s
+                INNER JOIN sys_user_role sur ON s.user_id = sur.user_id
+                INNER JOIN sys_role r ON sur.role_id = r.role_id
+            WHERE
+                s.user_name = #{userName}
+                AND s.phonenumber = #{phonenumber}
+                AND s.status='1'
+    </select>
+
+    <select id="selectUserListBySendTime" parameterType="String"  resultMap="BaseResultMap">
+        <if test="userType !=null  and userType !='' and userType == '1'.toString()">
+            SELECT
+            s.user_id,s.user_name,s.nick_name,s.user_no,s.status,s.email,s.phonenumber,r.role_id,r.role_name,s.update_time,
+            (select sur.user_id from
+             sys_user_role sur
+            LEFT JOIN sys_role r ON sur.role_id = r.role_id
+            WHERE
+            r.role_key='permission:twoManager' and r.status='1' and sur.user_id=s.user_id  limit 1) two_manager,
+            (select sur.user_id  from sys_user_role sur
+            LEFT JOIN sys_role r ON sur.role_id = r.role_id
+            WHERE
+            r.role_key='permission:eventSampling' and r.status='1' and sur.user_id=s.user_id limit 1) event_sampling
+            FROM
+            sys_user s
+            INNER JOIN
+            (SELECT sur.user_no,MAX(sur.update_time) update_time
+            FROM sys_user sur
+            WHERE sur.user_type = '1'
+            GROUP BY sur.user_no
+            ) t ON t.user_no = s.user_no AND s.update_time = t.update_time
+            LEFT JOIN sys_user_role sur ON s.user_id = sur.user_id
+            LEFT JOIN sys_role r ON sur.role_id = r.role_id  and r.status='1' and r.role_key not in('permission:twoManager','permission:eventSampling')
+            WHERE
+            s.user_type = '1'
+            <if test="syncTime !=null  and syncTime !=''">
+                and s.update_time>#{syncTime}
+            </if>
+        </if>
+
+        <if test="userType !=null  and userType !='' and userType == '2'.toString()">
+            SELECT u.user_id,u.user_name,u.nick_name,u.user_no,u.status,u.email,u.phonenumber,u.update_time,u.is_soss_del,r.role_id,r.role_name
+            FROM sys_user u
+            INNER JOIN
+            (SELECT s.user_no,MAX(s.update_time) update_time
+            FROM sys_user s
+            WHERE s.user_type = '2'
+            <if test="syncTime !=null  and syncTime !=''">
+                and s.update_time>#{syncTime}
+            </if>
+            GROUP BY s.user_no
+            ) t ON t.user_no = u.user_no AND u.update_time = t.update_time
+            LEFT JOIN sys_user_role ur ON ur.user_id = u.user_id
+            LEFT JOIN sys_role r ON ur.role_id = r.role_id AND r.`status` = '1'
+        </if>
+
+    </select>
+
+    <update id="updateByPrimaryKeySelective" parameterType="com.starso.system.api.domain.SysUser">
+        update sys_user
+        <set >
+            <if test="userName != null and userName != ''">
+                user_name = #{userName,jdbcType=VARCHAR},
+            </if>
+            <if test="nickName != null and nickName != ''">
+                nick_name = #{nickName,jdbcType=VARCHAR},
+            </if>
+            <if test="email != null and email != ''">
+                email = #{email,jdbcType=CHAR},
+            </if>
+            <if test="phonenumber != null and phonenumber != ''">
+                phonenumber = #{phonenumber,jdbcType=VARCHAR},
+            </if>
+            <if test="updateTime != null" >
+                update_time = #{updateTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="status != null" >
+                status = #{status,jdbcType=VARCHAR}
+            </if>
+        </set>
+        where user_id = #{userId,jdbcType=VARCHAR}
+    </update>
+
+    <select id="selectUserByUserNo" resultType="com.starso.system.api.domain.SysUser"  parameterType="com.starso.system.api.domain.SysUser">
+          SELECT
+                s.user_id,s.user_name,s.nick_name,s.email,s.phonenumber,s.is_send
+            FROM
+                sys_user s
+            WHERE  s.user_no=#{userNo}  and s.status !='0'
+    </select>
+    <update id="batchUpdateUserNo" parameterType="list">
+        <foreach item="item"  collection="dataList" separator=";" >
+            update sys_user set user_no=#{item.userNo} where user_name=#{item.userName} and phonenumber=#{item.phonenumber} and user_type='1'
+        </foreach>
+    </update>
+
+    <update id="updateCustomerLinkmanUserNoBatch" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            update sys_user set user_no=#{item.userNo} where nick_name = #{item.nickName} and phonenumber=#{item.phonenumber} and user_type = '2'
+        </foreach>
+    </update>
+    <update id="batchUpdateIsSend" parameterType="java.util.List">
+        <foreach collection="list" item="item" separator=";">
+            update sys_user set is_send = '1' where user_id = #{item.userId}
+        </foreach>
+    </update>
+
+    <select id="selectWorkbenchScheduleTask" parameterType="String"  resultMap="BaseResultMap">
+         SELECT
+                s.user_id,s.user_no ,task.id task_id,task.title task_title ,task.description task_description,task.begain_time  task_begain_time,
+                task.end_time task_end_time,task.level task_level,task.status task_status,task.detail_report_id,task.detail_report_name,task.task_group ,task.type task_type,task.cycle_type ,
+                task.cycle_user_defined_type,task.cycle_interval,task.create_time task_create_time,task.update_time task_update_time,task.cycle_status,task.is_workday,
+                intval.id intval_id,intval.task_group intval_task_group,intval.cycle_user_defined_type intval_cycle_user_defined_type,intval.intervals,u.user_no part_user_no,part.status part_status,part.id part_id,
+                (select max(new_time) from workbench_schedule_task s where s.executor_id=s.user_id  and s.type !='2')a_task_new_time,sr.role_name task_role_name,sl.role_name part_role_name,
+                (select t.cycle_status from workbench_schedule_task t where t.id=task.task_group and t.task_group=task.task_group) 'task_mother_cycle_status',
+                (select t.status from workbench_schedule_task t where t.id=task.task_group and t.task_group=task.task_group) 'task_mother_status',
+                (select count(1) from workbench_schedule_task s where  s.id=s.task_group and s.task_group=task.task_group  and begain_time>=FROM_UNIXTIME(UNIX_TIMESTAMP(CAST(SYSDATE()AS DATE))) and s.type !='2') 'is_exists_mother_task',
+                (select min(begain_time) begain_time from workbench_schedule_task where task_group=task.task_group and begain_time>=FROM_UNIXTIME(UNIX_TIMESTAMP(CAST(SYSDATE()AS DATE))) and type !='2')'is_min_begain_time',
+                sf.id file_id,sf.file_url,sf.file_name,task.new_leave_time b_new_leave_time,sf.status sf_status
+            FROM
+                 sys_user s
+                 inner join workbench_schedule_task task  on s.user_id=task.executor_id
+                 left join sys_role sr on sr.role_id=substring_index(task.role_id_executor_id,'_',1)
+                 left join workbench_schedule_task_interval intval on intval.task_group=task.task_group
+                 left join workbench_schedule_task_partake part on part.workbench_schedule_task_id=task.id
+                 left join s_file sf on sf.id=task.detail_report_id and sf.status='1'
+                 left join sys_user u on u.user_id=part.partake_id and u.status='1'
+                 left join sys_role sl on sl.role_id=substring_index(part.role_id_partake_id,'_',1)
+                   where
+                  task.begain_time>=FROM_UNIXTIME(UNIX_TIMESTAMP(CAST(SYSDATE()AS DATE))) and task.type !='2' and s.status='1'
+                  <if test="list !=null">
+                      and s.user_no in
+                      <foreach item = "item" collection="list" separator="," open="(" close=")">
+                          #{item.userNo}
+                      </foreach>
+                  </if>
+    </select>
+
+    <select id="selectUsersByNickNameAndPhone" resultType="com.starso.system.api.domain.SysUser" parameterType="com.starso.system.api.domain.SysUser">
+        select
+        <include refid="Base_Column_List" />
+        ,s_us.user_type userType
+        from sys_user s_us
+        where s_us.nick_name = #{nickName,jdbcType=VARCHAR} and s_us.phonenumber = #{phonenumber,jdbcType=VARCHAR} and s_us.status = '0' and s_us.user_type = '2'
+    </select>
+
+    <update id="mergeUser" parameterType="com.starso.system.api.domain.SysUser">
+        update sys_user
+        <set>
+            <if test="userNo != null and userNo != ''">user_no = #{userNo},</if>
+            <if test="userName != null and userName != ''">user_name = #{userName},</if>
+            <if test="nickName != null and nickName != ''">nick_name = #{nickName},</if>
+            <if test="userType != null and userType != ''">user_type = #{userType},</if>
+            <if test="email != null and email != ''">email = #{email},</if>
+            <if test="phonenumber != null ">phonenumber = #{phonenumber},</if>
+            <if test="sex != null and sex != ''">sex = #{sex},</if>
+            <if test="avatar != null and avatar != ''">avatar = #{avatar},</if>
+            <if test="password != null and password != ''">password = #{password},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="isLock != null and isLock != ''">is_lock = #{isLock},</if>
+            <if test="loginIp != null and loginIp != ''">login_ip = #{loginIp},</if>
+            <if test="loginDate != null">login_date = #{loginDate},</if>
+            <if test="updateBy != null and updateBy != ''">update_by = #{updateBy},</if>
+            <if test="remark != null">remark = #{remark},</if>
+            <if test="companyName != null">company_name = #{companyName},</if>
+            <if test="passWordUpdateTime != null">pass_word_update_time = #{passWordUpdateTime},</if>
+            <if test="isSossDel != null and isSossDel != ''">is_soss_del = #{isSossDel},</if>
+            <if test="isSend != null and isSend != ''">is_send = #{isSend},</if>
+            <if test="updateTime != null">update_time=#{updateTime,jdbcType=TIMESTAMP},</if>
+            <if test="createTime != null">create_time=#{createTime,jdbcType=TIMESTAMP},</if>
+            status = '1'
+        </set>
+        where nick_name = #{nickName,jdbcType=VARCHAR} and phonenumber = #{phonenumber,jdbcType=VARCHAR}
+    </update>
+
+
+    <select id="selectAllSysUser" resultMap="BaseResultMap">
+        SELECT
+            user_id,
+            user_no,
+            user_name
+        FROM
+            sys_user
+        WHERE
+            `status` = '1'
+    </select>
+
+
+    <select id="selectUserListAndNewTime" parameterType="String"  resultMap="BaseResultMap">
+         SELECT
+                s.user_no,
+                (select max(new_time) from workbench_schedule_task s where s.executor_id=s.user_id  and s.type !='2') a_task_new_time
+            FROM
+                 sys_user s
+                 inner join workbench_schedule_task task  on s.user_id=task.executor_id
+               where
+              task.begain_time>=FROM_UNIXTIME(UNIX_TIMESTAMP(CAST(SYSDATE()AS DATE))) and task.type !='2' and s.status='1'
+              group by s.user_no
+    </select>
+
+    <select id="selectUserLeaveListAndNewTime" parameterType="String"  resultMap="BaseResultMap">
+         SELECT
+                s.user_no,
+                (select max(new_leave_time) from workbench_schedule_task s where s.executor_id=s.user_id  and s.type ='2')a_new_leave_time
+            FROM
+                 sys_user s
+                 inner join workbench_schedule_task task  on s.user_id=task.executor_id
+               where
+                task.begain_time>=DATE_SUB( CURDATE( ), INTERVAL #{day} DAY ) and task.type ='2' and s.status='1'
+              group by s.user_no
+    </select>
+
+    <select id="selectWorkbenchLeaveScheduleTask" parameterType="String"  resultMap="BaseResultMap">
+         SELECT
+                s.user_id,s.user_no ,task.id task_id,task.title task_title ,task.description task_description,task.begain_time  task_begain_time,
+                task.end_time task_end_time,task.level task_level,task.status task_status,task.detail_report_id,task.detail_report_name,task.task_group ,task.type task_type,task.cycle_type ,
+                task.cycle_user_defined_type,task.cycle_interval,task.create_time task_create_time,task.update_time task_update_time,task.cycle_status,task.is_workday,
+                intval.id intval_id,intval.task_group intval_task_group,intval.cycle_user_defined_type intval_cycle_user_defined_type,intval.intervals,u.user_no part_user_no,part.status part_status,part.id part_id,
+                (select max(new_leave_time) from workbench_schedule_task s where s.executor_id=s.user_id  and s.type ='2')a_new_leave_time,sr.role_name task_role_name,sl.role_name part_role_name,
+                (select t.cycle_status from workbench_schedule_task t where t.id=task.task_group and t.task_group=task.task_group) 'task_mother_cycle_status',
+                (select t.status from workbench_schedule_task t where t.id=task.task_group and t.task_group=task.task_group) 'task_mother_status',
+                (select count(1) from workbench_schedule_task s where  s.id=s.task_group and s.task_group=task.task_group  and begain_time>=DATE_SUB( CURDATE( ), INTERVAL #{day} DAY ) and s.type ='2') 'is_exists_mother_task',
+                (select min(begain_time) begain_time from workbench_schedule_task where task_group=task.task_group and begain_time>=DATE_SUB( CURDATE( ), INTERVAL #{day} DAY ) and type ='2')'is_min_begain_time',
+                sf.id file_id,sf.file_url,sf.file_name,task.new_time b_task_new_time,sf.status sf_status
+            FROM
+                 sys_user s
+                 inner join workbench_schedule_task task  on s.user_id=task.executor_id
+                 left join sys_role sr on sr.role_id=substring_index(task.role_id_executor_id,'_',1)
+                 left join workbench_schedule_task_interval intval on intval.task_group=task.task_group
+                 left join workbench_schedule_task_partake part on part.workbench_schedule_task_id=task.id
+                 left join s_file sf on sf.id=task.detail_report_id and sf.status='1'
+                 left join sys_user u on u.user_id=part.partake_id and u.status='1'
+                 left join sys_role sl on sl.role_id=substring_index(part.role_id_partake_id,'_',1)
+                   where
+                  task.begain_time>=DATE_SUB( CURDATE( ), INTERVAL #{day} DAY ) and task.type ='2' and s.status='1'
+    </select>
+
+    <select id="selectUserById" resultType="com.starso.system.api.domain.SysUser">
+        SELECT
+            <include refid="Base_Column_List" />
+            ,s_us.user_type userType
+        from sys_user s_us
+        WHERE
+        s_us.user_id = #{userId,jdbcType=VARCHAR}
+    </select>
+</mapper>

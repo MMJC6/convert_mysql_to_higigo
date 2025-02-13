@@ -1,0 +1,431 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.vuln.mapper.VulnBusinessMapper" >
+
+    <resultMap id="BaseResultEmailMap" type="com.starso.job.modules.vuln.domain.VulnEmailSend">
+        <id column="user_id" jdbcType="VARCHAR" property="id" />
+        <result column="phoneNo" jdbcType="BIGINT" property="phoneNo" />
+        <result column="email" jdbcType="VARCHAR" property="email" />
+        <result column="user_type" jdbcType="VARCHAR" property="userType" />
+        <result column="user_name" jdbcType="VARCHAR" property="userName" />
+        <result column="user_no" jdbcType="VARCHAR" property="userNo" />
+        <collection property="vulnList" ofType="com.starso.job.modules.vuln.domain.VulnBusiness">
+            <result column="id" property="id" jdbcType="VARCHAR" />
+            <result column="initial_vuln_id" property="initialVulnId" jdbcType="VARCHAR" />
+            <result column="source" property="source" jdbcType="VARCHAR" />
+            <result column="title" property="title" jdbcType="VARCHAR" />
+            <result column="assetsName" property="assetsName" jdbcType="VARCHAR" />
+            <result column="assetsId" property="assetsId" jdbcType="VARCHAR" />
+            <result column="assetsType" property="assetsType" jdbcType="VARCHAR" />
+            <result column="system_url" property="systemUrl" jdbcType="VARCHAR" />
+            <result column="type" property="type" jdbcType="VARCHAR" />
+            <result column="level" property="level" jdbcType="VARCHAR" />
+            <result column="findTimeStr" property="findTimeStr" jdbcType="VARCHAR" />
+            <result column="back_status" property="backStatus" jdbcType="VARCHAR" />
+        </collection>
+        <collection property="overList" ofType="com.starso.job.modules.vuln.domain.VulnBusiness">
+            <result column="over_id" property="id" jdbcType="VARCHAR" />
+            <result column="over_initial_vuln_id" property="initialVulnId" jdbcType="VARCHAR" />
+            <result column="over_source" property="source" jdbcType="VARCHAR" />
+            <result column="over_title" property="title" jdbcType="VARCHAR" />
+            <result column="over_assetsName" property="assetsName" jdbcType="VARCHAR" />
+            <result column="over_assetsId" property="assetsId" jdbcType="VARCHAR" />
+            <result column="over_assetsType" property="assetsType" jdbcType="VARCHAR" />
+            <result column="over_system_url" property="systemUrl" jdbcType="VARCHAR" />
+            <result column="over_type" property="type" jdbcType="VARCHAR" />
+            <result column="over_level" property="level" jdbcType="VARCHAR" />
+            <result column="over_findTimeStr" property="findTimeStr" jdbcType="VARCHAR" />
+            <result column="over_back_status" property="backStatus" jdbcType="VARCHAR" />
+        </collection>
+    </resultMap>
+
+    <select id="selectUnCheckedVulns" parameterType="java.util.Map" resultType="java.util.Map">
+        SELECT t.userId,t.userName,t.mobilePhoneNo,t.sendType,t.userType,t.email,
+               GROUP_CONCAT(t.id) id,
+               GROUP_CONCAT(t.title) title,
+               count(1) count,
+		GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
+		GROUP_CONCAT(IF(t.countType = '1',t.title,NULL)) title1,
+		SUM(IF(t.countType = '1',1,0)) count1,
+		GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
+		GROUP_CONCAT(IF(t.countType = '2',t.title,NULL)) title2,
+		SUM(IF(t.countType = '2',1,0)) count2,
+		GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
+		GROUP_CONCAT(IF(t.countType = '3',t.title,NULL)) title3,
+		SUM(IF(t.countType = '3',1,0)) count3
+        from (
+            SELECT al.id, al.title, al.user_id userId, al.audit_status,al.remind_status,al.userName,al.mobilePhoneNo,al.sendType,al.userType,al.email,
+            CASE when count &lt;= 2400 then '1'
+            when count &gt; 2400 and count &lt;= 3360 then '2'
+            when count &gt; 3360 then '3' else '' end as countType
+            from (
+            SELECT ba.*,u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,
+            CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
+            case WHEN DATE_FORMAT(start_time, '%Y-%m-%d') &gt; DATE_FORMAT(end_time, '%Y-%m-%d') then 0
+            WHEN DATE_FORMAT(start_time, '%Y-%m-%d') = DATE_FORMAT(end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, start_time, end_time)
+            ELSE TIMESTAMPDIFF(MINUTE, start_time, CONCAT( DATE_FORMAT(start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(end_time, '%T'))) +
+            ( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; start_time AND CAST(workday as datetime) &lt; end_time ) * #{timeDifference} end count
+            from (
+            SELECT
+            au.id, au.title, au.check_id user_id, au.audit_status, au.remind_status,
+            IF(w1.id is NULL,(SELECT CONCAT(MIN(workday),#{workBeginTime}) from s_workday WHERE workday &gt; au.start_time_),au.start_time_) start_time,
+            IF(w2.id is NULL,(SELECT CONCAT(MAX(workday),#{workEndTime}) from s_workday WHERE workday &lt; au.end_time_),au.end_time_) end_time
+            from
+            (SELECT *,
+            CASE WHEN alert_time &lt; CONCAT(DATE_FORMAT(alert_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(alert_time, '%Y-%m-%d'),#{workBeginTime})
+            WHEN  alert_time &gt; CONCAT(DATE_FORMAT(alert_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(alert_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+            ELSE alert_time END as start_time_,
+            CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
+            WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+            ELSE now() END as end_time_
+            from vuln_business
+            where source = '2' and ((status = '1' and audit_status = '0') OR audit_status = '3')  and is_filtered = '0') au
+            LEFT JOIN s_workday w1 on w1.workday = DATE_FORMAT(au.start_time_, '%Y-%m-%d')
+            LEFT JOIN s_workday w2 on w2.workday = DATE_FORMAT(au.end_time_, '%Y-%m-%d')
+            ) ba
+            INNER JOIN sys_user u on ba.user_id = u.user_id
+            left join s_user_send_type st on st.user_id = u.user_id
+            HAVING count &gt; 960
+            ) al
+            HAVING countType != al.remind_status or al.remind_status is NULL
+            )t
+        GROUP BY t.userId
+    </select>
+
+    <update id="batchUpdateRemind" parameterType="list">
+        <foreach collection="list" item="item"  separator=";" >
+            update vuln_business
+            <set>
+                remind_status = #{item.countType,jdbcType=VARCHAR}
+            </set>
+            where id = #{item.id,jdbcType=VARCHAR}
+        </foreach>
+    </update>
+
+    <select id="selectSendTimeByEmailType" resultType="com.starso.job.modules.vuln.domain.VulnEmailSendDate" parameterType="java.lang.String">
+        select id, email_type, send_time from vuln_email_send_date where email_type = #{emailType,jdbcType=VARCHAR}
+    </select>
+
+    <insert id="insertEmailSend" parameterType="com.starso.job.modules.vuln.domain.VulnEmailSendDate">
+        insert into vuln_email_send_date (id, email_type, send_time)
+        values (#{id,jdbcType=VARCHAR}, #{emailType,jdbcType=VARCHAR}, #{sendTime,jdbcType=TIMESTAMP})
+    </insert>
+
+    <update id="updateTimeByEmailType" parameterType="com.starso.job.modules.vuln.domain.VulnEmailSendDate">
+        update vuln_email_send_date
+        set send_time = #{sendTime,jdbcType=TIMESTAMP}
+        where email_type = #{emailType,jdbcType=VARCHAR}
+    </update>
+
+    <select id="selectNoArrangeRetestVuln" resultType="com.starso.job.modules.vuln.domain.VulnBusiness">
+        select DISTINCT
+            v.id,v.initial_vuln_id,v.title,v.type_id,v.level,v.system,v.vuln_url,
+            v.back_status,v.back_time,v.correct_status,v.correct_time,d.assets_business_id assetsId,r.do_day
+        from vuln_business v
+                 LEFT JOIN (	SELECT vs.*,(SELECT pv.param_value from s_param_value pv where pv.param_id = (
+            CASE WHEN vs.`level` = '1' then 'low_risk_overtime'
+                 WHEN vs.`level` = '2' then 'middle_risk_overtime'
+                 WHEN vs.`level` = '3' then 'high_risk_overtime'
+                 WHEN vs.`level` = '4' then 'urgent_overtime' else '' end)) as do_day
+                                from vuln_business vs) r on v.id = r.id
+                 INNER JOIN assets_vuln_rel d on d.vuln_business_id = v.id
+                 INNER JOIN assets_business_user u on u.`status` = '1' and u.assets_id = d.assets_business_id
+            and IF(r.do_day = 0,DATE_FORMAT(now(),'%Y-%m-%d') > DATE_FORMAT(v.accept_time,'%Y-%m-%d'),now() > date_add(v.accept_time, interval r.do_day day))
+            and u.id IS NOT NULL
+            and v.back_status = '0'
+            and v.is_filtered = '0'
+            AND NOT EXISTS (SELECT '' FROM vuln_business_retest vr WHERE vr.vuln_business_id = v.initial_vuln_id)
+    </select>
+
+    <select id="selectUnAddSendVuln" resultMap="BaseResultEmailMap">
+        SELECT DISTINCT su.user_id user_id,su.phonenumber phoneNo,su.email,su.user_type,su.nick_name user_name,su.user_no,
+                        v.id,v.initial_vuln_id,v.source,v.title,'0' assetsType,b.id assetsId,b.`name` assetsName,v.vuln_url domain,v.type_id type,v.`level`,ifnull(date_format(v.audit_time,'%Y-%m-%d %T'),'') findTimeStr,v.back_status,
+                        null over_id,null over_initial_vuln_id,null over_source,null over_title,null over_assetsType,null over_assetsId,null over_assetsName,null over_domain,null over_type,null over_level,null over_findTimeStr,null over_back_status
+        FROM vuln_business v
+        INNER JOIN assets_vuln_rel d ON d.vuln_business_id = v.id
+        INNER JOIN assets_business_user u ON d.assets_business_id = u.assets_id AND u.`status` = 1
+        INNER JOIN assets_business b ON d.assets_business_id = b.id AND b.`status` = 1
+        INNER JOIN sys_user su ON u.user_id = su.user_id and su.status = 1
+        where v.back_status = '0' and v.is_filtered = '0'  and v.audit_status = '2'
+          and not exists(
+              select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '0' and n.send_user_type = '0'
+          )
+        UNION ALL
+        SELECT DISTINCT su.user_id user_id,su.phonenumber phoneNo,su.email,su.user_type,su.nick_name user_name,su.user_no,
+                        v.id,v.id initial_vuln_id,'3' source,v.title,'1' assetsType,r.id assetsId,r.`name` assetsName,INET_NTOA(v.vuln_ip) domain,'基础资源漏洞' type,v.`level`,ifnull(date_format(v.find_time,'%Y-%m-%d %T'),'') findTimeStr,v.back_status,
+		null over_id,null over_initial_vuln_id,null over_source,null over_title,null over_assetsType,null over_assetsId,null over_assetsName,null over_domain,null over_type,null over_level,null over_findTimeStr,null over_back_status
+        FROM vuln_resource_ip_assets v
+            INNER JOIN assets_resources_ports_service rps ON v.vuln_ip = rps.ip AND rps.`status` = '1'
+            INNER JOIN assets_resources r ON rps.assets_id = r.id AND r.`status` = '1'
+            INNER JOIN assets_basic_user u ON r.id = u.assets_id AND u.`status` = '1'
+            INNER JOIN sys_user su ON u.user_id = su.user_id and su.status = '1'
+        where v.back_status = '0' and v.is_filtered = '0'
+          and not exists(
+            select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '0' and n.send_user_type = '0'
+          )
+    </select>
+
+    <select id="selectRetestUnCorrectedVuln" resultMap="BaseResultEmailMap">
+        SELECT DISTINCT su.user_id user_id,su.phonenumber phoneNo,su.email,su.user_type,su.nick_name user_name,su.user_no,'0' assetsType,b.id assetsId,v.vuln_url domain,
+                        v.id,v.initial_vuln_id,v.source,v.title,b.`name` assetsName,v.type_id type,v.`level`,ifnull(date_format(v.audit_time,'%Y-%m-%d %T'),'') findTimeStr,v.back_status,
+                        null over_id,null over_initial_vuln_id,null over_source,null over_title,null over_assetsType,null over_assetsId,null over_domain,null over_assetsName,null over_type,null over_level,null over_findTimeStr,null over_back_status
+        FROM vuln_business v
+         INNER JOIN assets_vuln_rel d ON d.vuln_business_id = v.id
+         INNER JOIN assets_business_user u ON d.assets_business_id = u.assets_id AND u.`status` = '1'
+         INNER JOIN assets_business b ON d.assets_business_id = b.id AND b.`status` = '1'
+         INNER JOIN sys_user su ON u.user_id = su.user_id and su.status = '1'
+        WHERE  v.back_status = '3' and v.correct_status = '3' and v.is_filtered = '0'
+          and not exists(
+                select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '1' and n.send_user_type = '0'
+          )
+        UNION ALL
+        SELECT DISTINCT su.user_id user_id,su.phonenumber phoneNo,su.email,su.user_type,su.nick_name user_name,su.user_no,'1' assetsType,r.id assetsId,INET_NTOA(v.vuln_ip) domain,
+		v.id,v.id initial_vuln_id,'3' source,v.title,r.`name` assetsName,'基础资源漏洞' type,v.`level`,ifnull(date_format(v.find_time,'%Y-%m-%d %T'),'') findTimeStr,v.back_status,
+		null over_id,null over_initial_vuln_id,null over_source,null over_title,null over_assetsType,null over_assetsId,null over_domain,null over_assetsName,null over_type,null over_level,null over_findTimeStr,null over_back_status
+        FROM vuln_resource_ip_assets v
+            INNER JOIN assets_resources_ports_service rps ON v.vuln_ip = rps.ip AND rps.`status` = 1
+            INNER JOIN assets_resources r ON rps.assets_id = r.id AND r.`status` = 1
+            INNER JOIN assets_basic_user u ON r.id = u.assets_id AND u.`status` = 1
+            INNER JOIN sys_user su ON u.user_id = su.user_id and su.status = 1
+        where v.back_status = '3' and v.correct_status = '3' and v.is_filtered = '0'
+          and not exists(
+            select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '1' and n.send_user_type = '0'
+          )
+    </select>
+
+    <select id="selectNoRetestVulnList" resultType="com.starso.job.modules.vuln.domain.VulnBusiness">
+        select DISTINCT
+            v.id,v.initial_vuln_id,v.source,v.title,b.`name` assetsName,v.type_id type,v.`level`,ifnull(date_format(v.find_time,'%Y-%m-%d %T'),'') findTimeStr
+        from vuln_business v
+                 LEFT JOIN (	SELECT vs.*,(SELECT pv.param_value from s_param_value pv where pv.param_id = (
+            CASE WHEN vs.`level` = '1' then 'low_risk_overtime'
+                 WHEN vs.`level` = '2' then 'middle_risk_overtime'
+                 WHEN vs.`level` = '3' then 'high_risk_overtime'
+                 WHEN vs.`level` = '4' then 'urgent_overtime' else '' end)) as do_day
+                                from vuln_business vs) r on v.id = r.id
+                 INNER JOIN assets_vuln_rel d on d.vuln_business_id = v.id
+                 INNER JOIN assets_business b ON d.assets_business_id = b.id AND b.status = 1
+            where ( (v.back_status = '3' and v.correct_status = '2')  or (v.back_status = '1' and v.misreport_status = '2'))
+            and v.is_filtered = '0'  and v.audit_status = '2' and v.source = '1'
+              and not exists(
+                    select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '2' and n.send_user_type = '2'
+                )
+        UNION ALL
+        select DISTINCT
+            va.id,va.id initial_vuln_id,'3' source,va.title,ar.`name` assetsName,'基础资源漏洞' type,va.level,ifnull(date_format(va.find_time,'%Y-%m-%d %T'),'') findTimeStr
+        from vuln_resource_ip_assets va
+                 INNER JOIN assets_resources_ports_service rs on rs.ip = va.vuln_ip and rs.`status` = '1'
+                 INNER JOIN assets_resources ar ON rs.assets_id = ar.id AND ar.`status` = 1
+        where 1=1
+          and( (va.back_status = '3' and va.correct_status = '2')  or (va.back_status = '1' and va.misreport_status = '2'))
+          and va.is_filtered = '0'
+          and not exists(
+                select 1 from vuln_notice_notes n where n.vuln_id = va.id and n.send_type = '2' and n.send_user_type = '2'
+            )
+    </select>
+
+    <select id="selectOverRetestVuln" resultType="com.starso.job.modules.vuln.domain.VulnBusiness">
+        select DISTINCT
+            v.id,v.initial_vuln_id,v.title,b.`name` assetsName,v.type_id type,v.`level`,ifnull(date_format(v.find_time,'%Y-%m-%d %T'),'') findTimeStr, '1' source
+        from vuln_business v
+                 LEFT JOIN (	SELECT vs.*,(SELECT pv.param_value from s_param_value pv where pv.param_id = (
+            CASE WHEN vs.`level` = '1' then 'low_risk_retest_overtime'
+                 WHEN vs.`level` = '2' then 'middle_risk_retest_overtime'
+                 WHEN vs.`level` = '3' then 'high_risk_retest_overtime'
+                 WHEN vs.`level` = '4' then 'urgent_retest_overtime' else '' end)) as do_day
+                                from vuln_business vs) r on v.id = r.id
+                 INNER JOIN assets_vuln_rel d on d.vuln_business_id = v.id
+                 INNER JOIN assets_business b ON d.assets_business_id = b.id AND b.status = 1
+        where 1=1
+          and( (v.back_status = '3' and v.correct_status = '2')  or (v.back_status = '1' and v.misreport_status = '2'))
+          and v.is_filtered = '0'  and v.audit_status = '2' and v.source = '1'
+          and not exists(
+                select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '3' and n.send_user_type = '2'
+            )
+          and exists(
+                select 1 from vuln_notice_notes vr where vr.vuln_id = v.id and vr.send_type = '2' and vr.send_user_type = '2'
+                   and if(r.do_day= 0,DATE_FORMAT(now(),'%Y-%m-%d') > DATE_FORMAT(vr.send_time,'%Y-%m-%d'),now() > date_add(vr.send_time, interval r.do_day day))
+            )
+        UNION ALL
+        select DISTINCT
+            va.id,va.id initial_vuln_id,va.title,ar.`name` assetsName,'基础资源漏洞' type,va.level,ifnull(date_format(va.find_time,'%Y-%m-%d %T'),'') findTimeStr, '3' source
+        from vuln_resource_ip_assets va
+                 LEFT JOIN (	SELECT vr.*, (SELECT pv.param_value from s_param_value pv where pv.param_id = (
+            CASE WHEN vr.`level` = '1' then 'low_risk_retest_overtime'
+                 WHEN vr.`level` = '2' then 'middle_risk_retest_overtime'
+                 WHEN vr.`level` = '3' then 'high_risk_retest_overtime'
+                 WHEN vr.`level` = '4' then 'urgent_retest_overtime' else '' end)) as do_day
+                                from vuln_resource_ip_assets vr) r on va.vuln_resource_id = r.id
+                 INNER JOIN assets_resources_ports_service rs on rs.ip = va.vuln_ip and rs.`status` = '1'
+                 INNER JOIN assets_resources ar ON rs.assets_id = ar.id AND ar.`status` = 1
+        where 1=1
+          and( (va.back_status = '3' and va.correct_status = '2')  or (va.back_status = '1' and va.misreport_status = '2'))
+          and va.is_filtered = '0'
+          and not exists(
+                select 1 from vuln_notice_notes n where n.vuln_id = va.id and n.send_type = '3' and n.send_user_type = '2'
+            )
+          and exists(
+                select 1 from vuln_notice_notes vr where vr.vuln_id = va.id and vr.send_type = '2' and vr.send_user_type = '2'
+                                                     and if(r.do_day= 0,DATE_FORMAT(now(),'%Y-%m-%d') > DATE_FORMAT(vr.send_time,'%Y-%m-%d'),now() > date_add(vr.send_time, interval r.do_day day))
+            )
+    </select>
+
+    <select id="selectOverRetestSossVuln" resultType="com.starso.job.modules.vuln.domain.VulnBusiness">
+        select DISTINCT
+            v.id,v.initial_vuln_id,v.title,b.`name` assetsName,v.type_id type,v.`level`,ifnull(date_format(v.audit_time,'%Y-%m-%d %T'),'') findTimeStr
+        from vuln_business v
+                 LEFT JOIN (	SELECT vs.*,(SELECT pv.param_value from s_param_value pv where pv.param_id = (
+            CASE WHEN vs.`level` = '1' then 'low_risk_retest_overtime'
+                 WHEN vs.`level` = '2' then 'middle_risk_retest_overtime'
+                 WHEN vs.`level` = '3' then 'high_risk_retest_overtime'
+                 WHEN vs.`level` = '4' then 'urgent_retest_overtime' else '' end)) as do_day
+                                from vuln_business vs) r on v.id = r.id
+                 INNER JOIN vuln_business_retest vr ON v.retest_id = vr.id AND vr.result IS NULL
+                 INNER JOIN assets_vuln_rel d on d.vuln_business_id = v.id
+                 INNER JOIN assets_business b ON d.assets_business_id = b.id AND b.status = 1
+        where 1=1
+          and( (v.back_status = '3' and v.correct_status = '2')  or (v.back_status = '1' and v.misreport_status = '2'))
+          and v.is_filtered = '0'  and v.audit_status = '2'  and v.source = '1'
+          and (v.retest_status = '0' or v.retest_status = '3')
+          and v.source = '1'
+          and not exists(
+                select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '3' and n.send_user_type = '1'
+            )
+          and exists(
+                select 1 from vuln_business_retest vr where vr.vuln_business_id = v.id
+                and v.retest_status = '0'
+                and if(r.do_day=0 ,DATE_FORMAT(now(),'%Y-%m-%d') > DATE_FORMAT(vr.dis_time,'%Y-%m-%d'),now() > date_add(vr.dis_time, interval r.do_day day))
+                union all
+                select 1 from vuln_business_retest vr,vuln_business_audit va
+                where vr.vuln_business_id = v.id  and va.retest_id = vr.id
+                  and v.retest_status = '3'
+                  and if(r.do_day=0 ,DATE_FORMAT(now(),'%Y-%m-%d') > DATE_FORMAT(va.audit_time,'%Y-%m-%d'),now() > date_add(va.audit_time, interval r.do_day day))
+            )
+    </select>
+
+    <select id="selectNoAssetsVuln" resultType="com.starso.job.modules.vuln.domain.VulnBusiness">
+        SELECT v.id,v.initial_vuln_id,v.source,v.title,'' assetsName,if(v.source = '1', soss.`name`,scan.`name`) type,v.level,ifnull(date_format(v.audit_time,'%Y-%m-%d %T'),'') findTimeStr
+        FROM vuln_business v
+        LEFT JOIN soss_vuln_type soss ON v.type_id = soss.id AND v.source = '1' AND soss.`status` = '1'
+		LEFT JOIN soss_vuln_type scan ON v.type_id = scan.id AND v.source = '2' AND scan.`status` = '1'
+        WHERE NOT EXISTS(
+            SELECT '' FROM vuln_business vs
+            INNER JOIN assets_vuln_rel d ON d.vuln_business_id = vs.id
+            INNER JOIN assets_business b ON d.assets_business_id = b.id AND b.`status` = '1'
+            INNER JOIN assets_business_user u ON b.id = u.assets_id AND u.`status` = '1'
+            WHERE vs.id = v.id
+        )
+        and v.audit_status = '2'
+        and !((v.correct_status = '4' and v.back_status = '3') or (v.misreport_status = '3' and v.back_status = '1'))
+        and not exists(
+            select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '4' and n.send_user_type = '2'
+        )
+    </select>
+
+    <select id="selectNoRetestSossVuln" resultType="com.starso.job.modules.vuln.domain.VulnBusiness">
+        select DISTINCT
+            v.id,v.initial_vuln_id,v.title,b.`name` assetsName,v.type_id type,v.`level`,ifnull(date_format(v.audit_time,'%Y-%m-%d %T'),'') findTimeStr
+        from vuln_business v
+                 LEFT JOIN (	SELECT vs.*,(SELECT pv.param_value from s_param_value pv where pv.param_id = (
+            CASE WHEN vs.`level` = '1' then 'low_risk_overtime'
+                 WHEN vs.`level` = '2' then 'middle_risk_overtime'
+                 WHEN vs.`level` = '3' then 'high_risk_overtime'
+                 WHEN vs.`level` = '4' then 'urgent_overtime' else '' end)) as do_day
+                                from vuln_business vs) r on v.id = r.id
+                 INNER JOIN vuln_business_retest vr ON v.retest_id = vr.id AND vr.result IS NULL
+                 INNER JOIN assets_vuln_rel d on d.vuln_business_id = v.id
+                 INNER JOIN assets_business b ON d.assets_business_id = b.id AND b.status = 1
+        where ( (v.back_status = '3' and v.correct_status = '2')  or (v.back_status = '1' and v.misreport_status = '2'))
+        and v.is_filtered = '0'  and v.audit_status = '2' and v.source = '1'
+        and not exists(
+            select 1 from vuln_notice_notes n where n.vuln_id = v.id and n.send_type = '2' and n.send_user_type = '1'
+        )
+    </select>
+
+    <select id="getReportVulnAmount" resultType="java.lang.Integer" parameterType="java.util.Date">
+        select sum(count) count from (
+            SELECT
+            count( DISTINCT vb.id ) count
+            FROM
+            vuln_business vb
+            WHERE
+            vb.is_filtered = '0'
+            AND ! ( vb.back_status = '1' AND vb.misreport_status IN ( '1', '3', '4' ) )
+            AND  vb.`level` != '5'
+            AND vb.receive_time > #{startTime,jdbcType=TIMESTAMP} and vb.receive_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+
+            union all
+            select
+            count( DISTINCT vb.id ) count
+            FROM
+            vuln_resource_ip_assets vb
+            WHERE
+            vb.is_filtered = '0'
+            AND ! ( vb.back_status = '1' AND vb.misreport_status IN ( '1', '3', '4' ) )
+            AND  vb.`level` != '5'
+            AND vb.receive_time > #{startTime,jdbcType=TIMESTAMP} and vb.receive_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+        )t
+    </select>
+
+    <select id="getReportVulnLevelAmount" resultType="java.util.Map" parameterType="java.util.Date">
+        select level,sum(count) count  from (
+            SELECT
+            d.dict_label level,
+            count( DISTINCT vb.id ) count,
+            vb.`level` priority
+            FROM
+            vuln_business vb
+            LEFT JOIN sys_dict_data d ON vb.`level` = d.dict_value AND d.`status` = '1' AND d.dict_type = 'vuln_level'
+            WHERE
+            vb.is_filtered = '0'
+            AND ! ( vb.back_status = '1' AND vb.misreport_status IN ( '1', '3', '4' ) )
+            AND  vb.`level` != '5'
+            AND vb.receive_time > #{startTime,jdbcType=TIMESTAMP} and vb.receive_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+            group by d.dict_label
+            union all
+            select
+            d.dict_label level,
+            count( DISTINCT vb.id ) count,
+            vb.`level` priority
+            FROM
+            vuln_resource_ip_assets vb
+            LEFT JOIN sys_dict_data d ON vb.`level` = d.dict_value AND d.`status` = '1' AND d.dict_type = 'vuln_level'
+            WHERE
+            vb.is_filtered = '0'
+            AND ! ( vb.back_status = '1' AND vb.misreport_status IN ( '1', '3', '4' ) )
+            AND  vb.`level` != '5'
+            AND vb.receive_time > #{startTime,jdbcType=TIMESTAMP} and vb.receive_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+            group by d.dict_label
+        )t
+        group by level
+        ORDER BY priority DESC,count DESC
+    </select>
+
+    <select id="getReportCorrectVulnAmount" resultType="java.lang.Integer" parameterType="java.util.Date">
+        select sum(count) count from (
+            SELECT
+            count( DISTINCT vb.id ) count
+            FROM
+            vuln_business vb
+            WHERE
+            vb.is_filtered = '0'
+            AND ! ( vb.back_status = '1' AND vb.misreport_status IN ( '1', '3', '4' ) )
+            AND  vb.`level` != '5'
+            and vb.back_status = 3 AND vb.correct_status IN ( '1', '4' )
+            AND vb.correct_time > #{startTime,jdbcType=TIMESTAMP} and vb.correct_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+
+            union all
+            select
+            count( DISTINCT vb.id ) count
+            FROM
+            vuln_resource_ip_assets vb
+            WHERE
+            vb.is_filtered = '0'
+            AND ! ( vb.back_status = '1' AND vb.misreport_status IN ( '1', '3', '4' ) )
+            AND  vb.`level` != '5'
+            and vb.back_status = 3 AND vb.correct_status IN ( '1', '4' )
+            AND vb.correct_time > #{startTime,jdbcType=TIMESTAMP} and vb.correct_time <![CDATA[<=]]> #{endTime,jdbcType=TIMESTAMP}
+        )t
+    </select>
+
+</mapper>
