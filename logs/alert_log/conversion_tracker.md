@@ -15,14 +15,14 @@
 Started: ${date}
 
 Functions to convert:
-- [ ] DATE_FORMAT
-- [ ] IFNULL
-- [ ] GROUP_CONCAT
-- [ ] UUID
-- [ ] STR_TO_DATE
-- [ ] TIMESTAMPDIFF
-- [ ] DATE_ADD
-- [ ] FROM_UNIXTIME
+- [x] DATE_FORMAT
+- [x] IFNULL
+- [x] GROUP_CONCAT
+- [x] UUID
+- [x] STR_TO_DATE
+- [x] TIMESTAMPDIFF
+- [x] DATE_ADD
+- [x] FROM_UNIXTIME
 
 Structure changes:
 - [ ] Multi-table UPDATE splits

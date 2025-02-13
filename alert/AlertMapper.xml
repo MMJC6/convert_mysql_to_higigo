@@ -448,7 +448,7 @@
 				 when (t.important_level = 1 and FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3) > 4) then 4
 				 else FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3) end
 			),
-			t.level_update_time = date_add(t.level_update_time, interval FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3)*3 hour)
+			t.level_update_time = date_add('hour', FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3)*3, t.level_update_time)
 		where
 			t.`status` = '1'
 		  and t.stage = ''
@@ -582,9 +582,9 @@
 		a.description,sd.dict_label priority,a.dev_ip,
 		u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
 		CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
-		case WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') &gt; DATE_FORMAT(ba.end_time, '%Y-%m-%d') then 0
-		WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') = DATE_FORMAT(ba.end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time)
-		ELSE TIMESTAMPDIFF(MINUTE, ba.start_time, CONCAT( DATE_FORMAT(ba.start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(ba.end_time, '%T'))) +
+		case WHEN to_char(ba.start_time, 'YYYY-MM-DD') &gt; to_char(ba.end_time, 'YYYY-MM-DD') then 0
+		WHEN to_char(ba.start_time, 'YYYY-MM-DD') = to_char(ba.end_time, 'YYYY-MM-DD') then floor(extract(epoch from (ba.end_time - ba.start_time)) / 60)
+		ELSE floor(extract(epoch from (CONCAT(to_char(ba.start_time, 'YYYY-MM-DD'), ' ', to_char(ba.end_time, 'HH24:MI:SS'))::timestamp - ba.start_time)) / 60) +
 		( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; ba.start_time AND CAST(workday as datetime) &lt; ba.end_time ) * #{timeDifference} end count
 		from (
 		SELECT
@@ -600,16 +600,16 @@
 		IF(w2.id is NULL,(SELECT CONCAT(MAX(workday),#{workEndTime}) from s_workday WHERE workday &lt; au.end_time_),au.end_time_) end_time
 		from
 		(SELECT *,
-		CASE WHEN assign_time &lt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime})
-		WHEN  assign_time &gt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(assign_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+		CASE WHEN assign_time &lt; CONCAT(to_char(assign_time, 'YYYY-MM-DD'),#{workBeginTime}) then CONCAT(to_char(assign_time, 'YYYY-MM-DD'),#{workBeginTime})
+		WHEN  assign_time &gt; CONCAT(to_char(assign_time, 'YYYY-MM-DD'),#{workEndTime}) then CONCAT(to_char(date_add('day', 1, assign_time), 'YYYY-MM-DD'),#{workBeginTime})
 		ELSE assign_time END as start_time_,
-		CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
-		WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+		CASE WHEN now() &lt; CONCAT(to_char(now(), 'YYYY-MM-DD'),#{workBeginTime}) then CONCAT(to_char(date_add('day', -1, now()), 'YYYY-MM-DD'),#{workEndTime})
+		WHEN  now() &gt; CONCAT(to_char(now(), 'YYYY-MM-DD'),#{workEndTime}) then CONCAT(to_char(now(), 'YYYY-MM-DD'),#{workEndTime})
 		ELSE now() END as end_time_
 		from workbench_alert_user
 		where status = '2') au
-		LEFT JOIN s_workday w1 on w1.workday = DATE_FORMAT(au.start_time_, '%Y-%m-%d')
-		LEFT JOIN s_workday w2 on w2.workday = DATE_FORMAT(au.end_time_, '%Y-%m-%d')
+		LEFT JOIN s_workday w1 on w1.workday = to_char(au.start_time_, 'YYYY-MM-DD')
+		LEFT JOIN s_workday w2 on w2.workday = to_char(au.end_time_, 'YYYY-MM-DD')
 		) ba
 		INNER JOIN workbench_alert_info a on ba.alert_id = a.id and a.is_close = '0' and a.is_del = '0' <if test="nightFlg == 1">and a.is_night = '0'</if>
 		INNER JOIN sys_user u on ba.user_id = u.user_id
@@ -956,9 +956,9 @@
 		a.description,sd.dict_label priority,a.dev_ip,
 		u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
 		CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
-		case WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') &gt; DATE_FORMAT(ba.end_time, '%Y-%m-%d') then 0
-		WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') = DATE_FORMAT(ba.end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time)
-		ELSE TIMESTAMPDIFF(MINUTE, ba.start_time, CONCAT( DATE_FORMAT(ba.start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(ba.end_time, '%T'))) +
+		case WHEN to_char(ba.start_time, 'YYYY-MM-DD') &gt; to_char(ba.end_time, 'YYYY-MM-DD') then 0
+		WHEN to_char(ba.start_time, 'YYYY-MM-DD') = to_char(ba.end_time, 'YYYY-MM-DD') then floor(extract(epoch from (ba.end_time - ba.start_time)) / 60)
+		ELSE floor(extract(epoch from (CONCAT(to_char(ba.start_time, 'YYYY-MM-DD'), ' ', to_char(ba.end_time, 'HH24:MI:SS'))::timestamp - ba.start_time)) / 60) +
 		( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; ba.start_time AND CAST(workday as datetime) &lt; ba.end_time ) * #{timeDifference} end count
 		from (
 		SELECT
@@ -974,11 +974,11 @@
 		au.end_time_ end_time
 		from
 		(SELECT *,
-		CASE WHEN assign_time &lt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime})
-		WHEN  assign_time &gt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(assign_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
+		CASE WHEN assign_time &lt; CONCAT(to_char(assign_time, 'YYYY-MM-DD'),#{workBeginTime}) then CONCAT(to_char(assign_time, 'YYYY-MM-DD'),#{workBeginTime})
+		WHEN  assign_time &gt; CONCAT(to_char(assign_time, 'YYYY-MM-DD'),#{workEndTime}) then CONCAT(to_char(date_add('day', 1, assign_time), 'YYYY-MM-DD'),#{workBeginTime})
 		ELSE assign_time END as start_time_,
-		CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
-		WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
+		CASE WHEN now() &lt; CONCAT(to_char(now(), 'YYYY-MM-DD'),#{workBeginTime}) then CONCAT(to_char(date_add('day', -1, now()), 'YYYY-MM-DD'),#{workEndTime})
+		WHEN  now() &gt; CONCAT(to_char(now(), 'YYYY-MM-DD'),#{workEndTime}) then CONCAT(to_char(now(), 'YYYY-MM-DD'),#{workEndTime})
 		ELSE now() END as end_time_
 		from workbench_alert_user
 		where status = '2') au
