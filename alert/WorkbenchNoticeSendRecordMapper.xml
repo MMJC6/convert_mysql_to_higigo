@@ -29,7 +29,7 @@
     <select id="selectNotUpdatedRecord" resultType="java.lang.String">
         select id
         from workbench_notice_send_record
-        where status = '0' AND NOW() &lt;= DATE_ADD(send_time,INTERVAL ${timeout} HOUR)
+        where status = '0' AND NOW() &lt;= date_add('hour', ${timeout}, send_time)
     </select>
 
     <update id="updateSendStatus" parameterType="list">

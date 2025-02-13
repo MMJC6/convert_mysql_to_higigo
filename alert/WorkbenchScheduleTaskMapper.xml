@@ -61,7 +61,7 @@
 	                 and t.task_group = task.task_group
 	                 AND t.cycle_status = 1
 	                 AND t.cycle_type != '0')
-	    and (task.status = 1 OR task.status = 2)
+	    and (task.status = '1' OR task.status = '2')
 	group by task.task_group
 	having date_add(now(), interval 30 day) > MAX(task.begain_time)
     </select>
@@ -104,7 +104,7 @@
             select #{item.id}, title, description, executor_id, #{item.begainTimeStr}, #{item.endTimeStr}, level,`STATUS`, detail_report_id,detail_report_name,
             task_group,`type`,cycle_type,cycle_user_defined_type,cycle_interval,create_time, create_by, update_time, update_by,cycle_status,role_id_executor_id,#{item.newTime},#{item.newLeaveTime},is_workday
             from workbench_schedule_task where id=#{item.oldId};
-            insert into workbench_schedule_task_partake (id,workbench_schedule_task_id,partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id)select  MD5(UUID()),#{item.id},partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id from workbench_schedule_task_partake where  workbench_schedule_task_id=#{item.oldId}
+            insert into workbench_schedule_task_partake (id,workbench_schedule_task_id,partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id)select  MD5(uuid_generate_v4() || ''),#{item.id},partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id from workbench_schedule_task_partake where  workbench_schedule_task_id=#{item.oldId}
         </foreach>
     </insert>
 
@@ -119,8 +119,8 @@
             t.executor_id,
             t.begain_time,
             t.end_time,
-            DATE_FORMAT(t.begain_time, '%Y-%m-%d %T') begainTimeStr,
-            DATE_FORMAT(t.end_time, '%Y-%m-%d %T') endTimeStr
+            to_char(t.begain_time, 'YYYY-MM-DD HH24:MI:SS') begainTimeStr,
+            to_char(t.end_time, 'YYYY-MM-DD HH24:MI:SS') endTimeStr
         FROM
             workbench_schedule_task t
         WHERE
@@ -141,14 +141,14 @@
         insert into workbench_duty_time_count(id,time,count)
         values
         <foreach collection="list" item="item"  separator="," >
-            (MD5(UUID()), #{item,jdbcType=TIMESTAMP}, 0)
+            (MD5(uuid_generate_v4() || ''), #{item,jdbcType=TIMESTAMP}, 0)
         </foreach>;
     </insert>
 
     <select id="selectDutyCountByTime" parameterType="java.lang.String" resultType="com.starso.job.modules.alert.domain.WorkbenchDutyTimeCount">
         SELECT
             c.time,
-            DATE_FORMAT(c.time, '%Y-%m-%d %T') timeStr,
+            to_char(c.time, 'YYYY-MM-DD HH24:MI:SS') timeStr,
             COUNT(DISTINCT d.executor_id) count
         FROM
             workbench_duty_time_count c
@@ -177,8 +177,8 @@
             t.title,
             t.begain_time,
             t.end_time,
-            DATE_FORMAT(t.begain_time, '%Y-%m-%d %T') begainTimeStr,
-            DATE_FORMAT(t.end_time, '%Y-%m-%d %T') endTimeStr
+            to_char(t.begain_time, 'YYYY-MM-DD HH24:MI:SS') begainTimeStr,
+            to_char(t.end_time, 'YYYY-MM-DD HH24:MI:SS') endTimeStr
         FROM
             workbench_schedule_task t
         WHERE
@@ -216,7 +216,7 @@
             select #{item.id}, title, description, executor_id, #{item.begainTime}, #{item.endTime}, level,`STATUS`, detail_report_id,detail_report_name,
             task_group,#{item.type},#{item.cycleType},cycle_user_defined_type,cycle_interval,create_time, create_by, update_time, update_by,cycle_status,role_id_executor_id,is_workday
             from workbench_schedule_task where id=#{item.oldId};
-            insert into workbench_schedule_task_partake (id,workbench_schedule_task_id,partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id)select  MD5(UUID()),#{item.id},partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id from workbench_schedule_task_partake where  workbench_schedule_task_id=#{item.oldId}
+            insert into workbench_schedule_task_partake (id,workbench_schedule_task_id,partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id)select  MD5(uuid_generate_v4() || ''),#{item.id},partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id from workbench_schedule_task_partake where  workbench_schedule_task_id=#{item.oldId}
         </foreach>
     </insert>
 
@@ -272,7 +272,8 @@
 
     <insert id="insertScheduleTaskList">
         <foreach collection="list" item="item" >
-            REPLACE INTO workbench_schedule_task
+            DELETE FROM workbench_schedule_task WHERE id = #{item.id,jdbcType=VARCHAR};
+            INSERT INTO workbench_schedule_task
             (id, title, description,
             executor_id, begain_time, end_time,
             level, status, detail_report_id,
@@ -296,7 +297,8 @@
 
     <insert id="insertScheduleTaskIntervalList">
         <foreach collection="list" item="item" >
-            REPLACE INTO workbench_schedule_task_interval
+            DELETE FROM workbench_schedule_task_interval WHERE id = #{item.id,jdbcType=VARCHAR};
+            INSERT INTO workbench_schedule_task_interval
             (id, task_group, cycle_user_defined_type, intervals)
             values (#{item.id,jdbcType=VARCHAR}, #{item.taskGroup,jdbcType=VARCHAR}, #{item.cycleUserDefinedType,jdbcType=CHAR}, #{item.intervals,jdbcType=INTEGER});
         </foreach>
@@ -304,7 +306,8 @@
 
     <insert id="insertScheduleTaskPartakeList">
         <foreach collection="list" item="item" >
-            REPLACE INTO workbench_schedule_task_partake (id, workbench_schedule_task_id, partake_id,
+            DELETE FROM workbench_schedule_task_partake WHERE id = #{item.id,jdbcType=VARCHAR};
+            INSERT INTO workbench_schedule_task_partake (id, workbench_schedule_task_id, partake_id,
             status, create_time, create_by,update_time, update_by, role_id_partake_id
             )
             values (#{item.id,jdbcType=VARCHAR}, #{item.workbenchScheduleTaskId,jdbcType=VARCHAR}, #{item.partakeId,jdbcType=VARCHAR},
@@ -364,7 +367,7 @@
         where executor_id = #{executorId}
         and ( ( #{begainTimeStr} != end_time and #{begainTimeStr} BETWEEN begain_time and end_time )
         or ( #{endTimeStr} != begain_time and #{endTimeStr} BETWEEN begain_time and end_time ) or ( #{begainTimeStr} &lt; begain_time and end_time &lt; #{endTimeStr}) )
-        and status = 1
+        and status = '1'
         and  type='1'
         <if test="id !=null and id != ''">
             and id != #{id}

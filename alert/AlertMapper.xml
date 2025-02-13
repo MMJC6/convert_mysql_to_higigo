@@ -20,8 +20,8 @@
 		select
 			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
 			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
-			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
-			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time
+			t.create_time2,t.create_time3,t.create_time4,COALESCE(t.threat_score,0) threat_score,COALESCE(t.categories,'') categories,
+			COALESCE(t.reverse_domains,'') reverse_domains,COALESCE(t.location,'') location,COALESCE(t.reason,'') reason,COALESCE(t.score,0) score,t.get_time
 		from workbench_alert_info t
 		where t.is_close = '0' and t.is_night = '0' and t.status <![CDATA[<>]]> 0  and t.is_del = '0'
 	</select>
@@ -164,7 +164,7 @@
 		cdstip,idstport,domain,get_time, level_update_time, is_night,source,alert_id,cus_name,cruleid,ceventdigest)
 		values
 		<foreach collection="list" item="item" separator=",">
-			(MD5(UUID()), #{item.id,jdbcType=BIGINT}, #{item.ceventname,jdbcType=VARCHAR},
+			(MD5(uuid_generate_v4() || ''), #{item.id,jdbcType=BIGINT}, #{item.ceventname,jdbcType=VARCHAR},
 			#{item.ieventlevel,jdbcType=CHAR}, #{item.cdevip,jdbcType=VARCHAR}, #{item.cdevname,jdbcType=VARCHAR},
 			#{item.cdevtype,jdbcType=VARCHAR}, #{item.alertSrc,jdbcType=CHAR}, #{item.status,jdbcType=CHAR},
 			#{item.stage,jdbcType=CHAR}, from_unixtime(#{item.loccurtime}/1000,'%Y-%m-%d %T'), #{item.ieventlevel,jdbcType=CHAR},
@@ -201,7 +201,7 @@
 		cdstip,idstport,domain,get_time, level_update_time,is_night,source,alert_id,cus_name,cruleid,ceventdigest,merge_alert_no,is_new)
 		values
 		<foreach collection="list" item="item" separator=",">
-			(MD5(UUID()), #{item.alertNo,jdbcType=BIGINT}, #{item.title,jdbcType=VARCHAR},
+			(MD5(uuid_generate_v4() || ''), #{item.alertNo,jdbcType=BIGINT}, #{item.title,jdbcType=VARCHAR},
 			#{item.priority,jdbcType=CHAR}, #{item.devIp,jdbcType=VARCHAR}, #{item.devName,jdbcType=VARCHAR},
 			#{item.devType,jdbcType=VARCHAR}, #{item.alertSrc,jdbcType=CHAR}, #{item.status,jdbcType=CHAR},
 			#{item.stage,jdbcType=CHAR}, #{item.createTime,jdbcType=TIMESTAMP}, #{item.priority,jdbcType=CHAR},
@@ -223,7 +223,7 @@
 				 where ea.`status` = '1' and ea.source_id = '1' and ai.is_close = '0' and ai.`status` != '0' and ea.alert_id = ai.id
 				 ) al
 		) a ON e.id = a.event_id
-		where e.`status` = '1' and e.is_close = '0' and a.create_time &lt; STR_TO_DATE(CONCAT(DATE_FORMAT(NOW(),'%Y-%m-%d'),' 00:00:00'),'%Y-%m-%d %T')
+		where e.`status` = '1' and e.is_close = '0' and a.create_time &lt; to_timestamp(CONCAT(to_char(NOW(),'YYYY-MM-DD'),' 00:00:00'), 'YYYY-MM-DD HH24:MI:SS')
 		GROUP BY a.title,a.description,a.dev_ip,a.priority
 	</select>
 
@@ -246,8 +246,8 @@
 		SELECT * FROM (
 			SELECT t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
 			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
-			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
-			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time,
+			t.create_time2,t.create_time3,t.create_time4,COALESCE(t.threat_score,0) threat_score,COALESCE(t.categories,'') categories,
+			COALESCE(t.reverse_domains,'') reverse_domains,COALESCE(t.location,'') location,COALESCE(t.reason,'') reason,COALESCE(t.score,0) score,t.get_time,
 				   '1' as source_id from workbench_alert_info t where t.`status` = '1'
 		) al
 		where
@@ -298,7 +298,7 @@
 			<if test="ge4lunciClose != null and ge4lunciClose==0">
 				and stage BETWEEN 1 AND 3
 			</if>
-		  and TIMESTAMPDIFF(DAY,last_time,now()) &gt;= (select param_value from s_param_value where param_id = 'alert_interval_time' AND status = 1)
+		  and floor(extract(epoch from (now() - last_time)) / 86400) &gt;= (select param_value from s_param_value where param_id = 'alert_interval_time' AND status = '1')
 	</update>
 
 	<select id="selectNewAlerts" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
@@ -375,8 +375,8 @@
 		<!-- SELECT
 			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,t.space1,
 			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
-			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
-			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time
+			t.create_time2,t.create_time3,t.create_time4,COALESCE(t.threat_score,0) threat_score,COALESCE(t.categories,'') categories,
+			COALESCE(t.reverse_domains,'') reverse_domains,COALESCE(t.location,'') location,COALESCE(t.reason,'') reason,COALESCE(t.score,0) score,t.get_time
 		from workbench_alert_info t where t.status = '0' and t.is_new = '1'
 		and EXISTS (
 		SELECT 1 from workbench_alert_info i where i.`status` != '0' and i.is_close = '0' and is_del = '0'
@@ -387,8 +387,8 @@
 		SELECT
 			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,t.space1,
 			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
-			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
-			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time,i.alert_no mergeAlertNo
+			t.create_time2,t.create_time3,t.create_time4,COALESCE(t.threat_score,0) threat_score,COALESCE(t.categories,'') categories,
+			COALESCE(t.reverse_domains,'') reverse_domains,COALESCE(t.location,'') location,COALESCE(t.reason,'') reason,COALESCE(t.score,0) score,t.get_time,i.alert_no mergeAlertNo
 		from workbench_alert_info t,workbench_alert_info i  where t.status = '0' and t.is_new = '1'
 															  and i.`status` != '0' and i.is_close = '0' and i.is_del = '0'
 		and t.title = i.title and t.description = i.description and t.dev_ip = i.dev_ip and t.priority = i.priority
@@ -443,12 +443,12 @@
 		update workbench_alert_info t
 		set t.important_level = t.important_level + (
 			case when t.important_level = 4 then 1
-				 when (t.important_level = 3 and FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3) > 2) then 2
-				 when (t.important_level = 2 and FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3) > 3) then 3
-				 when (t.important_level = 1 and FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3) > 4) then 4
-				 else FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3) end
+				 when (t.important_level = 3 and FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3) > 2) then 2
+				 when (t.important_level = 2 and FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3) > 3) then 3
+				 when (t.important_level = 1 and FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3) > 4) then 4
+				 else FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3) end
 			),
-			t.level_update_time = date_add(t.level_update_time, interval FLOOR(TIMESTAMPDIFF(HOUR, t.level_update_time, NOW())/3)*3 hour)
+			t.level_update_time = date_add(t.level_update_time, interval FLOOR(floor(extract(epoch from (NOW() - t.level_update_time)) / 3600)/3)*3 hour)
 		where
 			t.`status` = '1'
 		  and t.stage = ''
@@ -460,23 +460,23 @@
 		UPDATE workbench_alert_info t,workbench_alert_user wu SET t.`status` = 8 , wu.`status` = 8
 		WHERE t.id = wu.alert_id AND t.`status` = 2 AND wu.`status` = 2 AND NOT EXISTS (
 			SELECT '' FROM workbench_schedule_task wt WHERE wu.user_id = wt.executor_id AND (wu.assign_time BETWEEN wt.begain_time AND wt.end_time)
-		  and wt.status = 1 and wt.type = 1
+		  and wt.status = '1' and wt.type = '1'
 			)
 	</update>
 
 	<!--查询误报、超时撤回、非值班分配撤回的告警，并统计它们被处理为误报和超时撤回的次数 -->
 	<select id="selectMayEndInfos" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
-		SELECT ai.id,ai.title,COUNT(wu.user_id) count, GROUP_CONCAT(wu.user_id) user_id FROM workbench_alert_info ai
+		SELECT ai.id,ai.title,COUNT(wu.user_id) count, string_agg(wu.user_id, ',') user_id FROM workbench_alert_info ai
 			LEFT JOIN workbench_alert_user wu ON ai.id = wu.alert_id AND ai.stage = wu.stage
 		WHERE ai.`status` in (3,6,8) AND wu.`status` in (3,6) and ai.is_del = '0' and ai.is_epicycle_end = '0'
 		GROUP BY ai.id
 	</select>
 
 	<select id="getAllAlertUsers" parameterType="int" resultType="com.starso.system.api.domain.SysUser">
-		SELECT u.user_id,u.nick_name,u.phonenumber,u.email,au.count `rows` ,date_format(wt.begain_time,'%Y-%m-%d %T') begainTimeStr, date_format(wt.end_time,'%Y-%m-%d %T') endTimeStr,
-		IFNULL((SELECT IFNULL(COUNT(1),0) from workbench_alert_user wau where wau.status BETWEEN 3 and 4 and u.user_id = wau.user_id),0)/au.num*8 as num
+		SELECT u.user_id,u.nick_name,u.phonenumber,u.email,au.count `rows` ,to_char(wt.begain_time,'YYYY-MM-DD HH24:MI:SS') begainTimeStr, to_char(wt.end_time,'YYYY-MM-DD HH24:MI:SS') endTimeStr,
+		COALESCE((SELECT COALESCE(COUNT(1),0) from workbench_alert_user wau where wau.status BETWEEN 3 and 4 and u.user_id = wau.user_id),0)/au.num*8 as num
 		from sys_user u
-		LEFT JOIN (SELECT w.user_id ,COUNT(1) count ,(TIMESTAMPDIFF(HOUR, MIN(w.assign_time), NOW())) num from workbench_alert_user w inner join workbench_alert_info a ON a.id = w.alert_id and a.is_del = '0' and a.`status` = '2' where w.`status` = '2' GROUP BY w.user_id ) au on u.user_id = au.user_id
+		LEFT JOIN (SELECT w.user_id ,COUNT(1) count ,(floor(extract(epoch from (NOW() - MIN(w.assign_time))) / 3600)) num from workbench_alert_user w inner join workbench_alert_info a ON a.id = w.alert_id and a.is_del = '0' and a.`status` = '2' where w.`status` = '2' GROUP BY w.user_id ) au on u.user_id = au.user_id
 		INNER JOIN workbench_schedule_task wt ON u.user_id = wt.executor_id AND wt.type = 1 AND wt.`status` = 1
 		where u.status = '1'
 		  AND (NOW() BETWEEN wt.begain_time AND wt.end_time)
@@ -511,9 +511,9 @@
 		SELECT
 		t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
 		t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
-		t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
-		IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time,
-		GROUP_CONCAT(u.user_id) user_id,COUNT(u.user_id) count,u2.user_id old_user_id,su.nick_name old_user_name
+			t.create_time2,t.create_time3,t.create_time4,COALESCE(t.threat_score,0) threat_score,COALESCE(t.categories,'') categories,
+			COALESCE(t.reverse_domains,'') reverse_domains,COALESCE(t.location,'') location,COALESCE(t.reason,'') reason,COALESCE(t.score,0) score,t.get_time,
+		string_agg(u.user_id, ',') user_id,COUNT(u.user_id) count,u2.user_id old_user_id,su.nick_name old_user_name
 		from workbench_alert_info t
 		LEFT JOIN workbench_alert_user u on u.alert_id = t.id and t.stage = u.stage and u.status <![CDATA[<>]]> 8
 		LEFT JOIN workbench_alert_user u2 on u2.id = t.alert_user_id
@@ -532,7 +532,7 @@
 	</select>
 
 	<select id="selectNeedNoticeAlert" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
-		SELECT GROUP_CONCAT(ba.id) id,GROUP_CONCAT(a.title) title
+		SELECT string_agg(ba.id, ',') id,string_agg(a.title, ',') title
 		from (
 				 SELECT
 					 au.id,
@@ -558,18 +558,18 @@
 
 	<select id="getNoticeAlerts" resultType="java.util.Map" parameterType="java.util.Map">
 		SELECT t.userId,t.email,t.mobilePhoneNo,t.userName,t.userType,t.sendType,
-		GROUP_CONCAT(t.id) id,
-		GROUP_CONCAT(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) SEPARATOR '#_ssp_#') title,
+		string_agg(t.id, ',') id,
+		string_agg(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), '#_ssp_#') title,
 		count(1) count,
-		GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
-		GROUP_CONCAT(IF(t.countType = '1',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title1,
-		SUM(IF(t.countType = '1',1,0)) count1,
-		GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
-		GROUP_CONCAT(IF(t.countType = '2',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title2,
-		SUM(IF(t.countType = '2',1,0)) count2,
-		GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
-		GROUP_CONCAT(IF(t.countType = '3',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title3,
-		SUM(IF(t.countType = '3',1,0)) count3
+		string_agg(CASE WHEN t.countType = '1' THEN t.id ELSE NULL END, ',') id1,
+		string_agg(CASE WHEN t.countType = '1' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') title1,
+		SUM(CASE WHEN t.countType = '1' THEN 1 ELSE 0 END) count1,
+		string_agg(CASE WHEN t.countType = '2' THEN t.id ELSE NULL END, ',') id2,
+		string_agg(CASE WHEN t.countType = '2' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') title2,
+		SUM(CASE WHEN t.countType = '2' THEN 1 ELSE 0 END) count2,
+		string_agg(CASE WHEN t.countType = '3' THEN t.id ELSE NULL END, ',') id3,
+		string_agg(CASE WHEN t.countType = '3' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') title3,
+		SUM(CASE WHEN t.countType = '3' THEN 1 ELSE 0 END) count3
 		from (
 		SELECT al.id,al.title,
 		al.description,al.priority,al.dev_ip,
@@ -714,7 +714,7 @@
 	</update>
 
 	<select id="selectNoAssignPersonAlert" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo" resultType="java.util.Map">
-		select GROUP_CONCAT(a.id) id, GROUP_CONCAT(a.title separator '、') title, count(1) count,GROUP_CONCAT(CONCAT_WS('@_ssp_@',a.title,a.priority,a.dev_ip,a.description) SEPARATOR '#_ssp_#' ) Space1
+		select string_agg(a.id, ',') id, string_agg(a.title, '、') title, count(1) count,string_agg(CONCAT_WS('@_ssp_@',a.title,a.priority,a.dev_ip,a.description), '#_ssp_#') Space1
 		from (
 			SELECT ai.id,ai.title,ai.priority,ai.dev_ip,ai.description,if(
 			(
@@ -767,15 +767,15 @@
 	<select id="assessmentTaskNotice" parameterType="java.util.Map" resultType="java.util.Map">
 		SELECT
 			ROUND(SUM(CASE WHEN i.`status` = '1' THEN 1 WHEN i.`status` = '2' THEN 0.5 ELSE 0 END)) as notFinish,
-			ROUND(IFNULL((SELECT COUNT(1)/COUNT(DISTINCT u.user_id) from workbench_alert_user u where u.end_time &gt;= STR_TO_DATE(#{workBeginTime,jdbcType=VARCHAR},'%Y-%m-%d %T') and u.end_time &lt;= STR_TO_DATE(#{noticeTime,jdbcType=VARCHAR},'%Y-%m-%d %T') and u.`status` != '2'),0)) finish,
-			TIMESTAMPDIFF(MINUTE, STR_TO_DATE(#{workBeginTime,jdbcType=VARCHAR},'%Y-%m-%d %T'), STR_TO_DATE(#{noticeTime,jdbcType=VARCHAR},'%Y-%m-%d %T')) previousTime,
-			TIMESTAMPDIFF(MINUTE, STR_TO_DATE(#{noticeTime,jdbcType=VARCHAR},'%Y-%m-%d %T'), STR_TO_DATE(#{workEndTime,jdbcType=VARCHAR},'%Y-%m-%d %T')) afterTime
+			ROUND(COALESCE((SELECT COUNT(1)/COUNT(DISTINCT u.user_id) from workbench_alert_user u where u.end_time &gt;= to_timestamp(#{workBeginTime,jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS') and u.end_time &lt;= to_timestamp(#{noticeTime,jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS') and u.`status` != '2'),0)) finish,
+			floor(extract(epoch from (to_timestamp(#{noticeTime,jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS') - to_timestamp(#{workBeginTime,jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS'))) / 60) previousTime,
+			floor(extract(epoch from (to_timestamp(#{workEndTime,jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS') - to_timestamp(#{noticeTime,jdbcType=VARCHAR}, 'YYYY-MM-DD HH24:MI:SS'))) / 60) afterTime
 		FROM
 			workbench_alert_info i
 	</select>
 
 	<select id="selectEventAlertRepeat" resultType="com.starso.job.modules.alert.domain.EventAlertRepeatNotice">
-		SELECT COUNT(1) count,GROUP_CONCAT(e.id) eventId,GROUP_CONCAT(CONCAT('“#Case',e.event_no,'-',e.title,'”') separator '、') eventTitle,
+		SELECT COUNT(1) count,string_agg(e.id, ',') eventId,string_agg(CONCAT('"#Case',e.event_no,'-',e.title,'"'), '、') eventTitle,
 			a.title,a.description,a.dev_ip devIp,a.priority
 		FROM `event` e
 			INNER JOIN (
@@ -788,7 +788,7 @@
 	</select>
 
 	<select id="selectNoticedEventAlertRepeat" parameterType="com.starso.job.modules.alert.domain.EventAlertRepeatNotice" resultType="com.starso.job.modules.alert.domain.EventAlertRepeatNotice">
-		SELECT id, event_id eventId, title, priority, dev_ip devIp, description, DATE_FORMAT(create_time,'%Y-%m-%d %T') createTimeStr
+		SELECT id, event_id eventId, title, priority, dev_ip devIp, description, to_char(create_time,'YYYY-MM-DD HH24:MI:SS') createTimeStr
 		from event_alert_repeat_notice
 		where title = #{title,jdbcType=VARCHAR}
 		  and priority = #{priority,jdbcType=VARCHAR}
@@ -800,7 +800,7 @@
 		insert into event_alert_repeat_notice (id, event_id, title, priority ,dev_ip ,description ,create_time)
 		values
 		<foreach collection="list" item="item" separator=",">
-			(MD5(UUID()), #{item.eventId,jdbcType=VARCHAR}, #{item.title,jdbcType=VARCHAR}, #{item.priority,jdbcType=VARCHAR},
+			(MD5(uuid_generate_v4() || ''), #{item.eventId,jdbcType=VARCHAR}, #{item.title,jdbcType=VARCHAR}, #{item.priority,jdbcType=VARCHAR},
 			#{item.devIp,jdbcType=VARCHAR}, #{item.description,jdbcType=VARCHAR}, now())
 		</foreach>
 	</insert>
@@ -809,8 +809,8 @@
 		select
 			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
 			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
-			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
-			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time
+			t.create_time2,t.create_time3,t.create_time4,COALESCE(t.threat_score,0) threat_score,COALESCE(t.categories,'') categories,
+			COALESCE(t.reverse_domains,'') reverse_domains,COALESCE(t.location,'') location,COALESCE(t.reason,'') reason,COALESCE(t.score,0) score,t.get_time
 		,t.is_epicycle_end,t.is_reappear,t.alert_id
 		from workbench_alert_info t
 		where t.is_matching_mul = '0' and t.status <![CDATA[<>]]> '0'
@@ -843,8 +843,8 @@
 		select
 			t.id, t.alert_no, t.title, t.priority, t.dev_ip, t.dev_name, t.dev_type, t.alert_src, t.status, t.stage,
 			t.create_time, t.important_level, t.num, t.description,t.is_night,t.csrcip,t.cdstip,t.idstport,t.domain,
-			t.create_time2,t.create_time3,t.create_time4,IFNULL(t.threat_score,0) threat_score,IFNULL(t.categories,'') categories,
-			IFNULL(t.reverse_domains,'') reverse_domains,IFNULL(t.location,'') location,IFNULL(t.reason,'') reason,IFNULL(t.score,0) score,t.get_time
+			t.create_time2,t.create_time3,t.create_time4,COALESCE(t.threat_score,0) threat_score,COALESCE(t.categories,'') categories,
+			COALESCE(t.reverse_domains,'') reverse_domains,COALESCE(t.location,'') location,COALESCE(t.reason,'') reason,COALESCE(t.score,0) score,t.get_time
 		from workbench_alert_info t
 		order by t.get_time desc
 		limit 1
@@ -893,7 +893,7 @@
 	</select>
 
 	<select id="getReportAlertDetail" resultType="java.lang.String" parameterType="java.util.Date">
-		select GROUP_CONCAT(concat(name,count,"次")) name from (
+		select string_agg(concat(name,count,'次'), ',') name from (
 		  select name,sum(count) count from (
 			  select  concat(title,' ( ' ,case when priority=1 or priority=2 then  '低危'
 			  when priority=3 then  '中危' when priority=4 then  '高危' when priority=5 then  '紧急' else priority end,' ) ') name,count(1) count,priority `level`
@@ -932,18 +932,18 @@
 
 	<select id="getNoticeAlertsFollow" resultType="java.util.Map">
 		SELECT t.userId,t.email,t.mobilePhoneNo,t.userName,t.userType,t.sendType,
-		GROUP_CONCAT(t.id) id,
-		GROUP_CONCAT(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) SEPARATOR '#_ssp_#') title,
+		string_agg(t.id, ',') id,
+		string_agg(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), '#_ssp_#') title,
 		count(1) count,
-		GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
-		GROUP_CONCAT(IF(t.countType = '1',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title1,
-		SUM(IF(t.countType = '1',1,0)) count1,
-		GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
-		GROUP_CONCAT(IF(t.countType = '2',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title2,
-		SUM(IF(t.countType = '2',1,0)) count2,
-		GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
-		GROUP_CONCAT(IF(t.countType = '3',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title3,
-		SUM(IF(t.countType = '3',1,0)) count3
+		string_agg(CASE WHEN t.countType = '1' THEN t.id ELSE NULL END, ',') id1,
+		string_agg(CASE WHEN t.countType = '1' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') title1,
+		SUM(CASE WHEN t.countType = '1' THEN 1 ELSE 0 END) count1,
+		string_agg(CASE WHEN t.countType = '2' THEN t.id ELSE NULL END, ',') id2,
+		string_agg(CASE WHEN t.countType = '2' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') title2,
+		SUM(CASE WHEN t.countType = '2' THEN 1 ELSE 0 END) count2,
+		string_agg(CASE WHEN t.countType = '3' THEN t.id ELSE NULL END, ',') id3,
+		string_agg(CASE WHEN t.countType = '3' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') title3,
+		SUM(CASE WHEN t.countType = '3' THEN 1 ELSE 0 END) count3
 		from (
 		SELECT al.id,al.title,
 		al.description,al.priority,al.dev_ip,
