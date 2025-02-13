@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.vuln.mapper.EarlywarningMapper" >
+
+    <resultMap id="BaseResultMap" type="com.starso.system.api.domain.Earlywarning" >
+        <id column="id" property="id" jdbcType="VARCHAR" />
+        <result column="warn_title" property="warnTitle" jdbcType="VARCHAR" />
+        <result column="warn_content" property="warnContent" jdbcType="VARCHAR" />
+        <result column="send_status" property="sendStatus" jdbcType="CHAR" />
+        <result column="send_time" property="sendTime" jdbcType="TIMESTAMP" />
+        <result column="status" property="status" jdbcType="CHAR" />
+        <result column="detail_report_url" property="detailReportUrl" jdbcType="VARCHAR" />
+        <result column="detail_report_name" property="detailReportName" jdbcType="VARCHAR" />
+        <result column="create_id" property="createId" jdbcType="VARCHAR" />
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+        <result column="update_id" property="updateId" jdbcType="VARCHAR" />
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+    <sql id="Base_Column_List" >
+        id, warn_content, send_status, send_time, status, detail_report_url, detail_report_name,
+        create_id, create_time, update_id, update_time,warn_title
+    </sql>
+
+    <sql id="Base_Column_List2" >
+        w.id, w.warn_content, w.send_status, w.send_time, w.status, w.detail_report_url, w.detail_report_name,
+        w.create_id, w.create_time, w.update_id, w.update_time,w.warn_title
+    </sql>
+
+    <select id="selectEarlywaringMaxUpdateTime" resultType="com.starso.system.api.domain.VulnEarlyWarning">
+        select max(update_time) update_time from vuln_early_warning
+    </select>
+
+   <delete id="deleteEarlywarningList" parameterType="list" >
+       <foreach collection="dataList"  open="(" close=")" separator="," item="item">
+           delete from earlywarning where id=#{item.id}
+       </foreach>
+   </delete>
+
+    <update id="replaceBatch" parameterType="list">
+        insert into vuln_early_warning (id,vid,file_id,score,heat,product_type,vendor,product,version,src,title,md5,
+        url,info,intime,solution,affected,is_warrning,vuln_type,vuln_notice_level,vuln_notice_harm,send_time,send_status,
+        flag,create_time,create_by,update_time,update_by)
+        values
+        <foreach collection="list" item="item"  separator=",">
+            (#{item.id,jdbcType=VARCHAR}, #{item.vid,jdbcType=VARCHAR}, #{item.fileId,jdbcType=VARCHAR},
+            #{item.score,jdbcType=VARCHAR}, #{item.heat,jdbcType=INTEGER}, #{item.productType,jdbcType=VARCHAR},
+            #{item.vendor,jdbcType=VARCHAR}, #{item.product,jdbcType=VARCHAR}, #{item.version,jdbcType=VARCHAR},
+            #{item.src,jdbcType=VARCHAR}, #{item.title,jdbcType=VARCHAR}, #{item.md5,jdbcType=VARCHAR},
+            #{item.url,jdbcType=VARCHAR}, #{item.info,jdbcType=VARCHAR}, #{item.intime,jdbcType=TIMESTAMP},
+            #{item.solution,jdbcType=VARCHAR}, #{item.affected,jdbcType=VARCHAR}, #{item.isWarrning,jdbcType=INTEGER},
+            #{item.vulnType,jdbcType=VARCHAR}, #{item.vulnNoticeLevel,jdbcType=VARCHAR}, #{item.vulnNoticeHarm,jdbcType=VARCHAR},
+            #{item.sendTime,jdbcType=TIMESTAMP}, #{item.sendStatus,jdbcType=VARCHAR}, #{item.flag,jdbcType=VARCHAR},
+            #{item.createTime,jdbcType=TIMESTAMP}, #{item.createBy,jdbcType=VARCHAR}, #{item.updateTime,jdbcType=TIMESTAMP},
+            #{item.updateBy,jdbcType=VARCHAR})
+        </foreach>;
+    </update>
+
+    <insert id="insertAffectedList" parameterType="list">
+        insert into vuln_early_warning_affected(id,warning_id,assembly,impact_version,secure_version,create_time,create_by,update_time,update_by)
+        values
+        <foreach collection="list" item="item"  separator=",">
+            (#{item.id,jdbcType=VARCHAR}, #{item.warningId,jdbcType=VARCHAR}, #{item.assembly,jdbcType=VARCHAR},
+            #{item.impactVersion,jdbcType=VARCHAR}, #{item.secureVersion,jdbcType=INTEGER},
+            #{item.createTime,jdbcType=TIMESTAMP}, #{item.createBy,jdbcType=VARCHAR}, #{item.updateTime,jdbcType=TIMESTAMP},
+            #{item.updateBy,jdbcType=VARCHAR})
+        </foreach>;
+    </insert>
+</mapper>

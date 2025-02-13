@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.centConfiguration.mapper.SspToSossAccountInformationMapper" >
+
+    <resultMap id="BaseResultMap" type="com.starso.job.modules.centConfiguration.domain.SspToSossAccountInformation" >
+        <id     property="id"       column="id"      />
+        <result property="nickName"   column="nick_name"  />
+        <result property="userName"   column="user_name"  />
+        <result property="initial"   column="initial"  />
+        <result property="sendStatus"   column="send_status"  />
+        <result property="userType"   column="user_type"  />
+    </resultMap>
+    <insert id="insert" parameterType="com.starso.job.modules.centConfiguration.domain.SspToSossAccountInformation">
+        insert into ssp_to_soss_account_information (id,nick_name,user_name,initial,send_status,user_type,user_id)
+        values
+            (#{id,jdbcType=VARCHAR},#{nickName,jdbcType=VARCHAR},#{userName,jdbcType=VARCHAR},
+            #{initial,jdbcType=VARCHAR},#{sendStatus,jdbcType=VARCHAR},#{userType,jdbcType=VARCHAR},#{userId,jdbcType=VARCHAR})
+    </insert>
+
+    <select id="selectAccountInformationList" resultMap="BaseResultMap">
+        SELECT
+            a.id,
+            a.nick_name,
+            a.user_name,
+            a.initial,
+            a.user_type
+        FROM
+            ssp_to_soss_account_information a
+            inner join sys_user s  on
+            a.user_id=s.user_id and s.status='1'
+        WHERE
+            send_status='0'
+    </select>
+
+    <update id="updateSendStatus" >
+        update ssp_to_soss_account_information a inner join sys_user s
+         on a.user_id=s.user_id and s.status='1' and a.send_status='0'
+         set send_status='1'
+    </update>
+
+</mapper>

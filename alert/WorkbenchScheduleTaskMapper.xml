@@ -1,0 +1,374 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.alert.mapper.WorkbenchScheduleTaskMapper">
+
+    <resultMap id="TbWorkbenchScheduleTaskMap" type="com.starso.system.api.domain.TbWorkbenchScheduleTask">
+        <id column="task_id" property="id" jdbcType="VARCHAR" />
+        <result column="task_title" property="title" jdbcType="VARCHAR" />
+        <result column="task_description" property="description" jdbcType="VARCHAR" />
+        <result column="task_begain_time" property="begainTime" jdbcType="VARCHAR" />
+        <result column="task_end_time" property="endTime" jdbcType="VARCHAR" />
+        <result column="task_level" property="level" jdbcType="VARCHAR" />
+        <result column="task_status" property="status" jdbcType="VARCHAR" />
+        <result column="detail_report_name" property="detailReportName" jdbcType="VARCHAR" />
+        <result column="task_group" property="taskGroup" jdbcType="VARCHAR" />
+        <result column="task_type" property="type" jdbcType="VARCHAR" />
+        <result column="cycle_type" property="cycleType" jdbcType="VARCHAR" />
+        <result column="cycle_user_defined_type" property="cycleUserDefinedType" jdbcType="VARCHAR" />
+        <result column="cycle_interval" property="cycleInterval" jdbcType="VARCHAR" />
+        <result column="cycle_status" property="cycleStatus" jdbcType="VARCHAR" />
+        <result column="file_name" property="fileName" jdbcType="VARCHAR" />
+        <result column="file_id" property="fileId" jdbcType="VARCHAR" />
+        <result column="file_url" property="fileUrl" jdbcType="VARCHAR" />
+        <result column="role_id_executor_id" property="roleIdExecutorId" jdbcType="VARCHAR" />
+        <result column="is_workday" property="isWorkday" jdbcType="VARCHAR" />
+        <result column="role_id_executor_id" property="roleIdExecutorId" jdbcType="VARCHAR" />
+        <result column="task_mother_cycle_status" property="taskMotherCycleStatus" jdbcType="VARCHAR" />
+        <result column="mother_task_id" property="motherTaskId" jdbcType="VARCHAR" />
+        <result column="mother_begin_time" property="motherBeginTime" jdbcType="VARCHAR" />
+        <result column="mother_end_time" property="motherEndTime" jdbcType="VARCHAR" />
+        <result column="task_role_name" property="roleName" jdbcType="VARCHAR" />
+        <result column="is_exists_mother_task" property="isExistsMotherTask" jdbcType="VARCHAR" />
+        <result column="is_min_begain_time" property="isMinBegainTime" jdbcType="TIMESTAMP" />
+    </resultMap>
+
+
+    <select id="selectWillCaculate" resultType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask">
+        select
+	  task.task_group,
+	  max(task.begain_time) begain_time,
+	  DATE_FORMAT( MAX(task.begain_time) ,'%Y-%m-%d %H:%i:%s') begainTimeStr,
+	  task.cycle_user_defined_type,
+	  (SELECT
+              t.new_time
+             FROM workbench_schedule_task t
+             WHERE t.id = t.task_group
+                 and t.task_group = task.task_group
+                 AND t.cycle_status = 1
+                 AND t.cycle_type != '0')create_time,
+    (SELECT
+      t.new_leave_time
+     FROM workbench_schedule_task t
+     WHERE t.id = t.task_group
+         and t.task_group = task.task_group
+         AND t.cycle_status = 1
+         AND t.cycle_type != '0')new_leave_time
+	from workbench_schedule_task task
+	where exists(SELECT
+	               ''
+	             FROM workbench_schedule_task t
+	             WHERE t.id = t.task_group
+	                 and t.task_group = task.task_group
+	                 AND t.cycle_status = 1
+	                 AND t.cycle_type != '0')
+	    and (task.status = 1 OR task.status = 2)
+	group by task.task_group
+	having date_add(now(), interval 30 day) > MAX(task.begain_time)
+    </select>
+
+    <select id="selectWillCaculateBytime" resultType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask">
+        select
+            task.id,
+            task.task_group,
+            task.begain_time,
+            task.end_time,
+            task.cycle_type,
+            task.cycle_interval,
+            task.cycle_user_defined_type,
+            intervals.intervals,
+            task.is_workday,
+            task.executor_id,
+            task.type
+        from workbench_schedule_task task
+        left join workbench_schedule_task_interval intervals on task.task_group = intervals.task_group
+        where  task.status = '1'
+          and task.cycle_type > 0
+          and task.begain_time=#{begainTimeStr}
+          and task.task_group =#{taskGroup}
+        order by task.id,intervals.intervals
+    </select>
+
+    <select id="selectWorkDayByTaskTime" parameterType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask" resultType="java.util.Map">
+        select
+            DATE_FORMAT(workday,'%Y-%m-%d') workday,datediff(workday,#{begainTimeStr}) diff
+        from s_workday t
+        where t.workDay>#{begainTimeStr}
+          and #{endTimeStr}>=t.workDay
+          and datediff(workday,#{begainTimeStr})>0
+    </select>
+
+    <insert id="insertCopyBatch" parameterType="list">
+        <foreach collection="list" item="item" separator=";">
+            insert into workbench_schedule_task (id, title, description, executor_id, begain_time, end_time, level,`STATUS`, detail_report_id,detail_report_name,
+            task_group,`type`,cycle_type,cycle_user_defined_type,cycle_interval,create_time, create_by, update_time, update_by,cycle_status,role_id_executor_id,new_time,new_leave_time,is_workday)
+            select #{item.id}, title, description, executor_id, #{item.begainTimeStr}, #{item.endTimeStr}, level,`STATUS`, detail_report_id,detail_report_name,
+            task_group,`type`,cycle_type,cycle_user_defined_type,cycle_interval,create_time, create_by, update_time, update_by,cycle_status,role_id_executor_id,#{item.newTime},#{item.newLeaveTime},is_workday
+            from workbench_schedule_task where id=#{item.oldId};
+            insert into workbench_schedule_task_partake (id,workbench_schedule_task_id,partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id)select  MD5(UUID()),#{item.id},partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id from workbench_schedule_task_partake where  workbench_schedule_task_id=#{item.oldId}
+        </foreach>
+    </insert>
+
+    <select id="selectCountByDay" resultType="int" parameterType="java.lang.String" >
+        SELECT COUNT(1) FROM s_workday_unnormal WHERE workday = DATE_FORMAT(#{day},'%Y-%m-%d')
+    </select>
+
+    <select id="selectDutysByUserId" parameterType="java.util.Map" resultType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask">
+        SELECT
+            t.id,
+            t.title,
+            t.executor_id,
+            t.begain_time,
+            t.end_time,
+            DATE_FORMAT(t.begain_time, '%Y-%m-%d %T') begainTimeStr,
+            DATE_FORMAT(t.end_time, '%Y-%m-%d %T') endTimeStr
+        FROM
+            workbench_schedule_task t
+        WHERE
+            t.type = '1'
+          AND t.`status` = '1'
+          AND t.begain_time &gt;= #{beginTime,jdbcType=TIMESTAMP}
+          AND t.end_time &lt;= #{endTime,jdbcType=TIMESTAMP}
+          AND t.executor_id in
+        <foreach collection="executorId" item="item" separator="," open="(" close=")">
+            #{item,jdbcType=VARCHAR}
+        </foreach>
+        order by t.begain_time,t.end_time
+    </select>
+
+    <insert id="insertDudyTimePoint" parameterType="java.util.List">
+        delete from workbench_duty_time_count;
+
+        insert into workbench_duty_time_count(id,time,count)
+        values
+        <foreach collection="list" item="item"  separator="," >
+            (MD5(UUID()), #{item,jdbcType=TIMESTAMP}, 0)
+        </foreach>;
+    </insert>
+
+    <select id="selectDutyCountByTime" parameterType="java.lang.String" resultType="com.starso.job.modules.alert.domain.WorkbenchDutyTimeCount">
+        SELECT
+            c.time,
+            DATE_FORMAT(c.time, '%Y-%m-%d %T') timeStr,
+            COUNT(DISTINCT d.executor_id) count
+        FROM
+            workbench_duty_time_count c
+            LEFT JOIN (
+                SELECT
+                t.id,
+                t.executor_id,
+                t.begain_time,
+                t.end_time
+                FROM
+                workbench_schedule_task t
+                INNER JOIN sys_user_role uf ON t.executor_id = uf.user_id
+                INNER JOIN sys_role r ON uf.role_id = r.role_id
+                WHERE
+                t.`status` = '1'
+                AND t.type = '1'
+                AND r.role_key = #{permission,jdbcType=VARCHAR}
+            ) d ON c.time BETWEEN d.begain_time
+            AND d.end_time
+        GROUP BY c.time
+        ORDER BY c.time
+    </select>
+    <select id="selectDutysByRole" parameterType="java.util.Map" resultType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask">
+        SELECT
+            t.id,
+            t.title,
+            t.begain_time,
+            t.end_time,
+            DATE_FORMAT(t.begain_time, '%Y-%m-%d %T') begainTimeStr,
+            DATE_FORMAT(t.end_time, '%Y-%m-%d %T') endTimeStr
+        FROM
+            workbench_schedule_task t
+        WHERE
+        t.type = '1'
+        AND t.`status` = '1'
+        AND EXISTS (
+            SELECT
+            1
+            FROM
+            sys_user_role uf,
+            sys_role r
+            WHERE
+            uf.role_id = r.role_id
+            AND t.executor_id = uf.user_id
+            AND
+            <foreach collection="permissions" item="item" open="(" separator=" or " close=")" >
+                r.role_key = #{item,jdbcType=VARCHAR}
+            </foreach>
+        )
+        AND t.end_time &lt;= #{endTime,jdbcType=TIMESTAMP}
+        AND t.begain_time &gt;= #{beginTime,jdbcType=TIMESTAMP}
+        order by t.begain_time,t.end_time
+    </select>
+
+    <select id="selectWorkbenchScheduleTaskByUser" resultType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask">
+        select id,type,cycle_type,begain_time,end_time  from workbench_schedule_task t
+         where not (#{beTime}>t.end_time or t.begain_time>#{enTime})
+         and t.executor_id=#{userId} and t.status='1'
+    </select>
+
+    <insert id="insertCpBatch" parameterType="list">
+        <foreach collection="list" item="item" separator=";">
+            insert into workbench_schedule_task (id, title, description, executor_id, begain_time, end_time, level,`STATUS`, detail_report_id,detail_report_name,
+            task_group,`type`,cycle_type,cycle_user_defined_type,cycle_interval,create_time, create_by, update_time, update_by,cycle_status,role_id_executor_id,is_workday)
+            select #{item.id}, title, description, executor_id, #{item.begainTime}, #{item.endTime}, level,`STATUS`, detail_report_id,detail_report_name,
+            task_group,#{item.type},#{item.cycleType},cycle_user_defined_type,cycle_interval,create_time, create_by, update_time, update_by,cycle_status,role_id_executor_id,is_workday
+            from workbench_schedule_task where id=#{item.oldId};
+            insert into workbench_schedule_task_partake (id,workbench_schedule_task_id,partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id)select  MD5(UUID()),#{item.id},partake_id,status,create_time,create_by,update_time,update_by,role_id_partake_id from workbench_schedule_task_partake where  workbench_schedule_task_id=#{item.oldId}
+        </foreach>
+    </insert>
+
+    <update id="updateWorkBenchList" parameterType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask" >
+            <foreach collection="list" item="item" separator=";">
+                update workbench_schedule_task set begain_time=#{item.begainTime},end_time=#{item.endTime} ,type=#{item.type},cycle_type=#{item.cycleType}
+                where  id=#{item.id}
+            </foreach>
+    </update>
+
+    <update id="stopAllScheduleByExecutorId">
+      update   workbench_schedule_task set cycle_status = '0' where
+      id  in (
+      select id from (
+          select st.id
+       from workbench_schedule_task st
+       where st.executor_id = #{executorId}  and st.id=st.task_group and cycle_status =1
+       )t
+       )
+       and type !='2'
+  </update>
+
+    <delete id="deleteAllScheduleByExecutorId">
+    DELETE p,wt FROM  workbench_schedule_task_partake p inner join workbench_schedule_task wt on p.workbench_schedule_task_id=wt.id and type !='2'
+      and wt.executor_id=#{executorId}  and DATE_FORMAT(wt.begain_time,'%Y-%m-%d')>=DATE_FORMAT(now(),'%Y-%m-%d');
+     DELETE  FROM  workbench_schedule_task
+        where type !='2' and   executor_id=#{executorId}  and DATE_FORMAT(begain_time,'%Y-%m-%d')>=DATE_FORMAT(now(),'%Y-%m-%d');
+  </delete>
+
+
+    <select id="selectScheduleTaskById"  resultMap="TbWorkbenchScheduleTaskMap">
+     select
+    	  task.id,
+        task.title ,
+        task.description,
+        task.begain_time  ,
+        task.end_time  task_end_time,
+        task.level task_level,
+        task.status task_status,
+        task.detail_report_id,
+        task.detail_report_name,
+        task.task_group ,
+        task.type task_type,
+        task.cycle_type,
+        task.cycle_user_defined_type,
+        task.cycle_interval,
+        task.create_time task_create_time,
+        task.cycle_status,
+        task.is_workday
+    	   from  workbench_schedule_task task
+          where task.id=#{id}
+  </select>
+
+    <insert id="insertScheduleTaskList">
+        <foreach collection="list" item="item" >
+            REPLACE INTO workbench_schedule_task
+            (id, title, description,
+            executor_id, begain_time, end_time,
+            level, status, detail_report_id,
+            detail_report_name, task_group, type,
+            cycle_type, cycle_user_defined_type, cycle_interval,
+            create_time, create_by, update_time,
+            update_by, cycle_status,is_workday,
+            new_time,new_leave_time,role_id_executor_id)
+            values (#{item.id,jdbcType=VARCHAR}, #{item.title,jdbcType=VARCHAR}, #{item.description,jdbcType=VARCHAR},
+            #{item.executorId,jdbcType=VARCHAR}, #{item.begainTime,jdbcType=TIMESTAMP}, #{item.endTime,jdbcType=TIMESTAMP},
+            #{item.level,jdbcType=CHAR}, #{item.status,jdbcType=CHAR}, #{item.fileId,jdbcType=VARCHAR},
+            #{item.detailReportName,jdbcType=VARCHAR}, #{item.taskGroup,jdbcType=VARCHAR}, #{item.type,jdbcType=CHAR},
+            #{item.cycleType,jdbcType=CHAR}, #{item.cycleUserDefinedType,jdbcType=CHAR}, #{item.cycleInterval,jdbcType=CHAR},
+            #{item.createTime,jdbcType=TIMESTAMP}, #{item.createId,jdbcType=VARCHAR}, #{item.updateTime,jdbcType=TIMESTAMP},
+            #{item.updateId,jdbcType=VARCHAR}, #{item.cycleStatus,jdbcType=CHAR},
+            #{item.isWorkday,jdbcType=VARCHAR}, #{item.newTime,jdbcType=TIMESTAMP}, #{item.newLeaveTime,jdbcType=TIMESTAMP},
+            #{item.roleIdExecutorId,jdbcType=VARCHAR}
+            );
+        </foreach>
+    </insert>
+
+    <insert id="insertScheduleTaskIntervalList">
+        <foreach collection="list" item="item" >
+            REPLACE INTO workbench_schedule_task_interval
+            (id, task_group, cycle_user_defined_type, intervals)
+            values (#{item.id,jdbcType=VARCHAR}, #{item.taskGroup,jdbcType=VARCHAR}, #{item.cycleUserDefinedType,jdbcType=CHAR}, #{item.intervals,jdbcType=INTEGER});
+        </foreach>
+    </insert>
+
+    <insert id="insertScheduleTaskPartakeList">
+        <foreach collection="list" item="item" >
+            REPLACE INTO workbench_schedule_task_partake (id, workbench_schedule_task_id, partake_id,
+            status, create_time, create_by,update_time, update_by, role_id_partake_id
+            )
+            values (#{item.id,jdbcType=VARCHAR}, #{item.workbenchScheduleTaskId,jdbcType=VARCHAR}, #{item.partakeId,jdbcType=VARCHAR},
+            #{item.status,jdbcType=CHAR}, #{item.createTime,jdbcType=TIMESTAMP}, #{item.createId,jdbcType=VARCHAR},
+            #{item.updateTime,jdbcType=TIMESTAMP}, #{item.updateId,jdbcType=VARCHAR},#{item.roleIdPartakeId,jdbcType=VARCHAR}
+            );
+        </foreach>
+    </insert>
+    <update id="updateScheduleTaskCycleStatus">
+        update   workbench_schedule_task set cycle_status="1"
+        where  id in
+        <foreach collection="set" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <update id="updatePartIdGroupIdList">
+        update workbench_schedule_task_partake set workbench_schedule_task_id=#{groupId}
+        where workbench_schedule_task_id=#{id}
+    </update>
+
+    <delete id="deleteAllLeaveScheduleByExecutorId">
+     DELETE p,wt FROM  workbench_schedule_task_partake p inner join workbench_schedule_task wt on p.workbench_schedule_task_id=wt.id and type ='2'
+      and wt.executor_id=#{executorId}  and wt.begain_time>DATE_SUB( CURDATE( ), INTERVAL #{day} DAY );
+
+       DELETE  FROM  workbench_schedule_task
+        where type ='2' and   executor_id=#{executorId}  and begain_time>DATE_SUB( CURDATE( ), INTERVAL #{day} DAY );
+
+  </delete>
+
+    <update id="stopAllLeaveScheduleByExecutorId">
+      update   workbench_schedule_task set cycle_status = '0' where
+      id  in (
+      select id from (
+          select st.id
+       from workbench_schedule_task st
+       where st.executor_id = #{executorId}  and st.id=st.task_group and cycle_status =1
+       )t
+       )
+       and type ='2'
+  </update>
+
+    <select id="selectIntervalCount" parameterType="com.starso.system.api.domain.TbWorkbenchScheduleTaskInterval" resultType="int">
+        select count(1) from workbench_schedule_task_interval where task_group=#{taskGroup}
+         and cycle_user_defined_type=#{cycleUserDefinedType} and intervals=#{intervals}
+    </select>
+
+    <insert id="insert">
+          insert into  workbench_schedule_task_interval
+            (id, task_group, cycle_user_defined_type, intervals)
+            values (#{id,jdbcType=VARCHAR}, #{taskGroup,jdbcType=VARCHAR}, #{cycleUserDefinedType,jdbcType=CHAR}, #{intervals,jdbcType=INTEGER});
+    </insert>
+
+    <select id="selectCalendarTaskByUser" resultType="int">
+        select count(*)
+        from workbench_schedule_task
+        where executor_id = #{executorId}
+        and ( ( #{begainTimeStr} != end_time and #{begainTimeStr} BETWEEN begain_time and end_time )
+        or ( #{endTimeStr} != begain_time and #{endTimeStr} BETWEEN begain_time and end_time ) or ( #{begainTimeStr} &lt; begain_time and end_time &lt; #{endTimeStr}) )
+        and status = 1
+        and  type='1'
+        <if test="id !=null and id != ''">
+            and id != #{id}
+        </if>
+    </select>
+
+</mapper>

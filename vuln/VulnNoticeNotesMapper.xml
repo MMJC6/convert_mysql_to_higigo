@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.vuln.mapper.VulnNoticeNotesMapper" >
+
+    <insert id="insertBatch" parameterType="list">
+        insert into vuln_notice_notes (id, record_id, vuln_id,
+        vuln_source, send_type, email_status,
+        send_time, remarks,send_user_type)
+        values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id,jdbcType=VARCHAR}, #{item.recordId,jdbcType=VARCHAR}, #{item.vulnId,jdbcType=VARCHAR},
+            #{item.vulnSource,jdbcType=VARCHAR}, #{item.sendType,jdbcType=VARCHAR}, #{item.emailStatus,jdbcType=VARCHAR},
+            #{item.sendTime,jdbcType=TIMESTAMP}, #{item.remarks,jdbcType=VARCHAR}, #{item.sendUserType,jdbcType=VARCHAR})
+        </foreach>
+    </insert>
+
+    <select id="selectByRecordId" parameterType="java.lang.String" resultType="com.starso.job.modules.vuln.domain.VulnNoticeNotes">
+        select
+            id, record_id, vuln_id, vuln_source, send_type, email_status, send_time, remarks,send_user_type
+        from vuln_notice_notes
+        where record_id = #{recordId,jdbcType=VARCHAR}
+    </select>
+
+</mapper>

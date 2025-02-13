@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.event.mapper.EventAffectedAssetsMiddleMapper">
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.event.domain.EventAffectedAssetsMiddle">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="event_id" jdbcType="VARCHAR" property="eventId" />
+    <result column="event_title" jdbcType="VARCHAR" property="eventTitle" />
+    <result column="ips" jdbcType="VARCHAR" property="ips" />
+    <result column="create_id" jdbcType="VARCHAR" property="createId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_id" jdbcType="VARCHAR" property="updateId" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+
+  <delete id="deleteEventAffectedAssetsMiddle">
+    delete from event_affected_assets_middle
+  </delete>
+  <!--查询最近一段时间的有受影响资产的事件-->
+  <select id="getEventAffectedAssets" resultMap="BaseResultMap" parameterType="java.lang.String">
+    <![CDATA[
+    SELECT t.id as event_id,CONCAT('Case#',t.event_no,t.title_prefix,t.title)  as event_title,t.ips
+    FROM
+    (SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    GROUP_CONCAT( DISTINCT INET_NTOA( ip.ip ) ) ips,
+    GROUP_CONCAT( DISTINCT ip.PORT ) ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_business_rel rel on e.id = rel.event_id
+    INNER JOIN assets_business b ON rel.asset_id = b.id
+    LEFT JOIN assets_business_ports_service ip ON b.id = ip.assets_id
+    WHERE
+    e.`status` = '1' and rel.`status` = '1' and b.`status` = '1' AND ip.`STATUS` = '1'
+    AND e.is_close = 0 AND e.is_reopen = 0
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+    UNION ALL
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    GROUP_CONCAT( DISTINCT INET_NTOA( ip.ip ) ) ips,
+    GROUP_CONCAT( DISTINCT ip.PORT ) ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_resources_rel rel on e.id = rel.event_id
+    INNER JOIN assets_resources b ON rel.asset_id = b.id
+    LEFT JOIN assets_resources_ports_service ip ON b.id = ip.assets_id
+    WHERE
+    e.`status` = '1' and rel.`status` = '1' AND b.`STATUS` = '1' AND ip.`STATUS` = '1'
+    AND e.is_close = 0 AND e.is_reopen = 0
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+    UNION ALL
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    GROUP_CONCAT( DISTINCT INET_NTOA( ip.ip ) ) ips,
+    '' ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_terminal_rel rel on e.id = rel.event_id
+    INNER JOIN assets_terminal b ON rel.asset_id = b.id
+    LEFT JOIN assets_terminal_ip ip ON b.id = ip.assets_id
+    WHERE
+    e.`status` = '1' and rel.`status` = '1' AND b.`STATUS` = '1' AND ip.`STATUS` = '1'
+    AND e.is_close = 0 AND e.is_reopen = 0
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+
+    UNION ALL
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    GROUP_CONCAT( DISTINCT INET_NTOA(b.internet_ip ),',', INET_NTOA(b.lan_ip ) ) ips,
+    '' ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_domain_confirm_rel rel on e.id = rel.event_id
+    INNER JOIN assets_domain_not_confirm b ON rel.asset_id = b.id
+    WHERE
+    e.`status` = '1' and rel.`status` = '1' AND b.`STATUS` = '1'
+    AND e.is_close = 0 AND e.is_reopen = 0
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+    UNION ALL
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    INET_NTOA( b.ip ) ips,
+    '' ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_ip_confirm_rel rel on e.id = rel.event_id
+    INNER JOIN assets_ip_not_confirm b ON rel.asset_id = b.id
+    WHERE
+    e.`status` = '1' and rel.`status` = '1' AND b.`STATUS` = '1'
+    AND e.is_close = 0 AND e.is_reopen = 0
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+
+
+    UNION ALL
+
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    GROUP_CONCAT( DISTINCT INET_NTOA( ip.ip ) ) ips,
+    GROUP_CONCAT( DISTINCT ip.PORT ) ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_business b on e.id = b.event_id
+    LEFT JOIN event_assets_business_ports_service ip ON b.id = ip.assets_id
+    WHERE
+    e.`status` = '1' and b.`status` = '1' AND ip.STATUS = 1
+    AND (e.is_close = '1' OR e.is_reopen = '1')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+    UNION ALL
+
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    GROUP_CONCAT( DISTINCT INET_NTOA( ip.ip ) ) ips,
+    GROUP_CONCAT( DISTINCT ip.PORT ) ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_resources b on e.id = b.event_id
+    LEFT JOIN event_assets_resources_ports_service ip ON b.id = ip.assets_id
+    WHERE
+    e.`status` = '1' and b.STATUS = 1 AND ip.STATUS = 1
+    AND (e.is_close = '1' OR e.is_reopen = '1')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+    UNION ALL
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    GROUP_CONCAT( DISTINCT INET_NTOA( ip.ip ) ) ips,
+    '' ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_terminal b on e.id = b.event_id
+    LEFT JOIN event_assets_terminal_ip ip on b.id = ip.assets_id
+
+    WHERE
+    e.`status` = '1' and b.`STATUS` = '1' AND ip.`STATUS` = '1'
+    AND (e.is_close = '1' OR e.is_reopen = '1')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+    UNION ALL
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    GROUP_CONCAT( DISTINCT INET_NTOA(b.internet_ip ),',', INET_NTOA(b.lan_ip ) ) ips,
+    '' ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_domain_not_confirm b on e.id = b.event_id
+    WHERE
+    e.`status` = '1'  AND b.`STATUS` = '1'
+    AND (e.is_close = '1' OR e.is_reopen = '1')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id
+
+    UNION ALL
+
+    SELECT
+    e.id,e.event_no,e.title_prefix,e.title,b.`name`,
+    INET_NTOA( b.ip ) ips,
+    '' ports
+    FROM
+    `event` e
+    INNER JOIN event_assets_ip_not_confirm b on e.id = b.event_id
+    WHERE
+    e.`status` = '1' AND b.`STATUS` = '1'
+    AND (e.is_close = '1' OR e.is_reopen = '1')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') <= DATE_FORMAT(NOW(),'%Y-%m-%d %T')
+    AND DATE_FORMAT(e.create_time,'%Y-%m-%d %T') >=
+    date_sub(date_sub(date_format(now(),'%Y-%m-%d %T'),interval extract(day from now())-1 day),interval ${time} MONTH)
+    GROUP BY e.id,b.id) t
+    ORDER BY t.event_no desc
+    ]]>
+  </select>
+
+  <!--保存临时表-->
+  <insert id="saveEventAffectedAssetsMiddle" parameterType="list">
+    INSERT INTO event_affected_assets_middle (
+      id,
+      event_id,
+      event_title,
+      ips,
+      create_time
+    ) values
+    <foreach collection="list" item="item" separator=",">
+      (MD5(uuid()), #{item.eventId,jdbcType=VARCHAR}, #{item.eventTitle,jdbcType=VARCHAR},#{item.ips,jdbcType=VARCHAR},now())
+    </foreach>
+  </insert>
+
+  <!--疑似关联事件-->
+  <select id="selectMatchEvent" statementType="CALLABLE" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo" resultMap="BaseResultMap">
+    call getEventAssetsAffected(#{id,mode=OUT,jdbcType=VARCHAR},#{title,mode=OUT,jdbcType=VARCHAR},#{mathEventTime,mode=IN,jdbcType=VARCHAR},#{csrcip,mode=IN,jdbcType=VARCHAR},#{cdstip,mode=IN,jdbcType=VARCHAR})
+  </select>
+  <!--从中间表查询疑似关联事件-->
+  <select id="selectMathEventWithMiddle" parameterType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo" resultMap="BaseResultMap">
+    select m.* from event_affected_assets_middle m
+    <where>
+    (
+      <if test="csrcip !=null and csrcip !=''">
+        LOCATE(#{csrcip},m.ips)>0
+      </if>
+      <if test="csrcip !=null and csrcip !='' and cdstip !=null and cdstip !=''">
+        OR
+      </if>
+      <if test="cdstip !=null and cdstip !=''">
+        LOCATE(#{cdstip},m.ips) > 0
+      </if>
+      <if test="(csrcip == null or csrcip =='') and (cdstip == null or cdstip =='')">
+        1=0
+      </if>
+    )
+    </where>
+  </select>
+
+</mapper>

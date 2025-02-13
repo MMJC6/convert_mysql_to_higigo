@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.dataTimer.mapper.SspEventMapper">
+    <resultMap id="BaseResultMap" type="com.starso.job.modules.event.domain.Event">
+      <id column="id" jdbcType="VARCHAR" property="id" />
+      <result column="customer_no" jdbcType="VARCHAR" property="customerNo" />
+      <result column="event_no" jdbcType="VARCHAR" property="eventNo" />
+      <result column="title_prefix" jdbcType="VARCHAR" property="titlePrefix" />
+      <result column="title" jdbcType="VARCHAR" property="title" />
+      <result column="level_id" jdbcType="INTEGER" property="levelId" />
+      <result column="beagin_time" jdbcType="TIMESTAMP" property="beaginTime" />
+      <result column="end_time" jdbcType="TIMESTAMP" property="endTime" />
+      <result column="status" jdbcType="CHAR" property="status" />
+      <result column="is_close" jdbcType="CHAR" property="isClose" />
+      <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+      <result column="create_by" jdbcType="VARCHAR" property="createBy" />
+      <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+      <result column="update_by" jdbcType="VARCHAR" property="updateBy" />
+      <result column="reject_id" jdbcType="VARCHAR" property="rejectId" />
+      <result column="reject_time" jdbcType="VARCHAR" property="rejectTime" />
+      <result column="reject_reason" jdbcType="VARCHAR" property="rejectReason" />
+      <result column="template_id" jdbcType="VARCHAR" property="templateId" />
+      <result column="template_type" jdbcType="VARCHAR" property="templateType" />
+      <result column="espot_check_status" jdbcType="VARCHAR" property="espotCheckStatus" />
+      <result column="description" jdbcType="VARCHAR" property="description" />
+      <result column="event_desc" jdbcType="VARCHAR" property="eventDesc" />
+    </resultMap>
+
+    <sql id="Base_Column_List">
+      e.id,e.event_no, e.title_prefix, e.title, e.level_id, e.status, e.beagin_time,
+      e.end_time,e.create_time, e.update_time, e.is_close,e.template_id,e.is_close,
+      e.reject_reason,e.template_type,e.espot_check_status,e.reject_time,e.description,e.event_desc
+    </sql>
+
+    <select id="selectEvent" parameterType="com.starso.job.modules.event.domain.Event" resultMap="BaseResultMap">
+      SELECT DISTINCT
+          <include refid="Base_Column_List" />,su.user_name create_by,u.user_name update_by,s_u.user_name reject_id
+      FROM `event` e
+      INNER JOIN sys_user su ON e.create_by = su.user_id AND su.status = '1'
+      LEFT JOIN sys_user u ON e.update_by = u.user_id AND u.status = '1'
+      LEFT JOIN sys_user s_u ON e.reject_id = s_u.user_id AND s_u.status = '1'
+      WHERE (e.`status` = '1' OR (e.`status` = '0' AND e.reject_reason IS NOT NULL))
+      <if test="updateTime != null">
+          AND e.update_time >= #{updateTime, jdbcType=TIMESTAMP}
+      </if>
+    </select>
+
+    <select id="selectEventNumByDay" resultType="java.util.Map">
+      SELECT COUNT(1) eventAddCount FROM `event` e WHERE e.status = '1' AND DATE(e.create_time) = CURDATE()
+    </select>
+</mapper>

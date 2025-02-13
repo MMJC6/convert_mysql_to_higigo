@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.centConfiguration.mapper.SLeaveApprovalMapper" >
+
+    <resultMap id="BaseResultMap" type="com.starso.system.api.domain.SLeaveApproval" >
+        <id     property="id"       column="id"      />
+        <result property="beginTime"   column="begin_time"  />
+        <result property="endTime"   column="end_time"  />
+        <result property="beTime"   column="be_time"  />
+        <result property="enTime"   column="en_time"  />
+        <result property="userId"   column="user_id"  />
+        <result property="leaveStatus" column="leave_status"/>
+        <result property="recoveryStatus" column="recovery_status"/>
+    </resultMap>
+
+    <insert id="batchSLeaveApproval">
+        REPLACE INTO s_leave_approval(id, sp_no,apply_time,applyer,leave_type,begin_time,end_time,duration,state,create_time,be_time,en_time,leave_status,reduce_startus,recovery_status) values
+        <foreach item="item" index="index" collection="list" separator=",">
+            (#{item.id},#{item.spNo},#{item.applyTime},#{item.applyer},#{item.leaveType},#{item.beginTime},#{item.endTime},#{item.duration},
+            0,now(),#{item.beTime},#{item.enTime},#{item.leaveStatus},'0','0')
+        </foreach>
+    </insert>
+
+    <select id="selectSLeaveApprovalList"  resultMap="BaseResultMap">
+        select  sla.id,sla.begin_time,sla.end_time,sla.be_time,sla.en_time,su.user_id,sla.leave_status
+            from s_leave_approval sla inner join sys_user su  on sla.applyer=su.user_no and su.status='1'
+            where
+            <if test='type="0"'>
+              sla.state='0'
+             AND NOW()>= sla.begin_time
+            </if>
+    </select>
+
+    <update id="updateSleaveApproval" parameterType="com.starso.job.modules.alert.domain.WorkbenchScheduleTask" >
+        <foreach collection="list" item="item" separator=";">
+            update s_leave_approval set state='1'
+             <if test="item.reduceStartus !=null and item.reduceStartus !='' ">
+                 , reduce_startus=#{item.reduceStartus}
+             </if>
+            <if test="item.recoveryStatus !=null and item.recoveryStatus !='' ">
+                , recovery_status=#{item.recoveryStatus}
+            </if>
+            where  id=#{item.id}
+        </foreach>
+    </update>
+
+    <select id="selectRecoveryAleaveList" resultMap="BaseResultMap">
+        select id, '1' recovery_status from s_leave_approval
+         where state='1'
+         and reduce_startus='1'
+         and recovery_status='0'
+         AND NOW()>= en_time
+    </select>
+
+</mapper>

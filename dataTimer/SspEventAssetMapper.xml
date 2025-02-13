@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.starso.job.modules.dataTimer.mapper.SspEventAssetMapper">
+  <resultMap id="BaseResultMap" type="com.starso.system.api.domain.SspEventAsset">
+    <id column="id" jdbcType="VARCHAR" property="id" />
+    <result column="customer_no" jdbcType="VARCHAR" property="customerNo" />
+    <result column="event_id" jdbcType="VARCHAR" property="eventId" />
+    <result column="type" jdbcType="VARCHAR" property="type" />
+    <result column="source" jdbcType="VARCHAR" property="source" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="ips" jdbcType="VARCHAR" property="ips" />
+    <result column="domains" jdbcType="VARCHAR" property="domains" />
+  </resultMap>
+
+
+  <select id="selectEventAssets" resultMap="BaseResultMap" parameterType="date">
+   select * from ( select rel.id,e.id event_id ,'1' type, '1' source, bus.name name,GROUP_CONCAT(distinct INET_NTOA(ser.ip)) ips
+  from assets_business bus
+  inner join event_assets_business_rel rel on rel.asset_id = bus.id and rel.`status` = '1' and bus.`status`='1'
+  inner join event e on e.id = rel.event_id and e.status = '1' and e.is_close = '0'
+  left join assets_business_ports_service ser on ser.assets_id = bus.id and ser.`status`='1'
+  <if test="updateTime != null">
+  where  rel.update_time >= #{updateTime, jdbcType=VARCHAR} or e.update_time >= #{updateTime, jdbcType=VARCHAR} or  ser.update_time>=#{updateTime, jdbcType=VARCHAR}
+  </if>
+    group by bus.id,e.id
+  union
+
+  select rel.id,e.id event_id ,'1' type,'2' source,bas.name,GROUP_CONCAT(distinct INET_NTOA( ser.ip)) ips
+  from assets_resources bas
+  inner join event_assets_resources_rel rel on rel.asset_id = bas.id and rel.`status` = '1' and bas.`status`='1'
+  inner join event e on e.id = rel.event_id and e.status = '1' and e.is_close = '0'
+  left join assets_resources_ports_service ser on ser.assets_id = bas.id and ser.`status`='1'
+  <if test="updateTime != null">
+  where  rel.update_time >= #{updateTime, jdbcType=VARCHAR} or e.update_time >= #{updateTime, jdbcType=VARCHAR} or  ser.update_time>=#{updateTime, jdbcType=VARCHAR}
+  </if>
+    group by bas.id,e.id
+  union
+
+  select eab.id,e.id event_id ,'2' type,'1' source,eab.name name,GROUP_CONCAT(distinct INET_NTOA(eabps.ip)) ips
+  from event_assets_business eab
+  inner join event e on e.id = eab.event_id and e.status = '1' and  e.is_close = '1'
+    <if test="updateTime != null">
+    and e.update_time >=#{updateTime, jdbcType=VARCHAR}
+    </if>
+  left join event_assets_business_ports_service eabps on eabps.assets_id = eab.id and eabps.`status`='1'
+  where eab.`status`='1'
+    group by eab.id,e.id
+
+  union
+
+  select distinct ear.id,e.id event_id, '2' type,'2' source,ear.name name,group_concat(distinct INET_NTOA(earps.ip)) ips
+  from event_assets_resources ear
+  inner join event e on e.id = ear.event_id and e.status = '1' and  e.is_close = '1'
+    <if test="updateTime != null">
+    and e.update_time >= #{updateTime, jdbcType=VARCHAR}
+    </if>
+  left join event_assets_resources_ports_service earps on earps.assets_id = ear.id and earps.`status`='1'
+  where ear.`status`='1'
+    group by ear.id,e.id ) abc
+  where abc.id is not null
+  </select>
+</mapper>

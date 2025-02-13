@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.user.mapper.SUserSendTypeMapper">
+
+    <select id="selectSendType" parameterType="com.starso.system.api.domain.SysUser" resultType="com.starso.job.modules.user.domain.SUserSendType">
+        select s.*
+        from s_user_send_type s
+        where
+            s.user_id = #{userId,jdbcType=VARCHAR}
+    </select>
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.starso.job.modules.setting.mapper.TbVersionMapper">
+
+	<select id="selectLastSspVersion" resultType="com.starso.system.api.domain.TbVersion">
+		select id,version_no,upgrade_time,remark from s_version
+		where version_no like '%SSP%'
+		order by upgrade_time desc,id asc
+			limit 1
+	</select>
+	<select id="selectLastSiemVersion" resultType="com.starso.system.api.domain.TbVersion">
+		select id,version_no,upgrade_time,remark from s_version
+		where version_no like '%SIEM%'
+		order by upgrade_time desc,id asc
+			limit 1
+	</select>
+
+</mapper>

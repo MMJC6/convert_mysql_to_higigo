@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.event.mapper.EventMttInfoMapper" >
+
+	<sql id="Base_Column_List" >
+		id, IFNULL(run_time, '') run_time, begin_time, end_time, IFNULL(`desc`, '') `desc`
+	</sql>
+
+	<select id="selectByPrimaryKey" resultType="com.starso.job.modules.event.domain.EventMttInfo">
+		select
+		<include refid="Base_Column_List" />,
+		date_format(begin_time,'%Y-%m-%d %T') beginTimeStr,date_format(end_time,'%Y-%m-%d %T') endTimeStr
+		from event_mtt_info
+		where id = #{id,jdbcType=VARCHAR}
+	</select>
+</mapper>

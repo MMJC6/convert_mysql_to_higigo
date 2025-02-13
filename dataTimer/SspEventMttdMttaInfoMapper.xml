@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.starso.job.modules.dataTimer.mapper.SspEventMttdMttaInfoMapper" >
+  <resultMap id="BaseResultMap" type="com.starso.job.modules.event.domain.EventMttdMttaInfo" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="num" property="num" jdbcType="VARCHAR" />
+    <result column="alert_time" property="alertTime" jdbcType="TIMESTAMP" />
+    <result column="submit_time" property="submitTime" jdbcType="TIMESTAMP" />
+    <result column="work_begin_time" property="workBeginTime" jdbcType="VARCHAR" />
+    <result column="work_end_time" property="workEndTime" jdbcType="VARCHAR" />
+    <result column="mttd" property="mttd" jdbcType="DOUBLE" />
+    <result column="mtta" property="mtta" jdbcType="DOUBLE" />
+    <result column="screening_time" property="screeningTime" jdbcType="TIMESTAMP" />
+    <result column="spareTime" property="spareTime" jdbcType="TIMESTAMP" />
+    <result column="type" property="type" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    s.id, s.num, s.alert_time, s.submit_time, s.work_begin_time, s.work_end_time, s.mttd, s.mtta, s.screening_time, 
+    s.type
+  </sql>
+  <select id="selectSspEventMttdMttaInfo" resultMap="BaseResultMap" parameterType="com.starso.job.modules.event.domain.EventMttdMttaInfo" >
+    select 
+    <include refid="Base_Column_List" />
+    from event_mttd_mtta_info s
+    <if test="screeningTime != null">
+    	where s.screening_time >= #{screeningTime,jdbcType=TIMESTAMP}
+    </if>
+  </select>
+</mapper>
