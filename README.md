@@ -65,6 +65,7 @@
   1. 问题定位分析
   2. 规则权重调整
   3. 直接覆盖式转换
+  4. 生成转换错误日志，包括原因和解决方案，记录到 alert_convert_workspace/AlertMapper_conversion/valid_error_log.md 中
 - **特殊处理**：
   - code_blocks_new 替换二次转换结果
 ```
