@@ -53,10 +53,25 @@
 | Division by Zero | N/A | None |
 | REPLACE INTO | N/A | None |
 
+### 4. selectUnNightUnClose.sql
+| Check Category | Status | Issues |
+|---------------|---------|---------|
+| Function Replacements | ✅ | IFNULL → COALESCE |
+| Statement Structure | ✅ | None |
+| Value Conversions | ✅ | None |
+| Query Structure | ✅ | None |
+| Identifiers | ✅ | None |
+| Special Rules | ✅ | CDATA preserved |
+| UUID Conversion | N/A | None |
+| Type Conversion | ✅ | None |
+| Alias Handling | ✅ | AS added |
+| Division by Zero | N/A | None |
+| REPLACE INTO | N/A | None |
+
 ## Function Conversion Summary
 - GROUP_CONCAT → string_agg: 7 conversions
 - DATE_FORMAT → to_char: 9 conversions
-- IFNULL → COALESCE: 0 conversions
+- IFNULL → COALESCE: 6 conversions
 - TIMESTAMPDIFF → extract epoch: 2 conversions
 - IF → CASE WHEN: 9 conversions
 - date_add: 2 conversions
@@ -64,7 +79,7 @@
 ## Value Conversion Summary
 - Status values converted to strings: 4 instances (already in string format)
 - Backticks removed: 1 instance (selectAlertChanged.sql)
-- Explicit AS added: 29 instances
+- Explicit AS added: 35 instances
 
 ## Recheck List
 No files requiring recheck.
