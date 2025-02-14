@@ -63,7 +63,7 @@
 
 ## Value Conversion Summary
 - Status values converted to strings: 4 instances (already in string format)
-- Backticks removed: 0 instances (none present)
+- Backticks removed: 1 instance (selectAlertChanged.sql)
 - Explicit AS added: 29 instances
 
 ## Recheck List
