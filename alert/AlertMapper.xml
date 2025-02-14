@@ -539,34 +539,45 @@
 
 	<select id="getNoticeAlerts" resultType="java.util.Map" parameterType="java.util.Map">
 		SELECT t.userId,t.email,t.mobilePhoneNo,t.userName,t.userType,t.sendType,
-		GROUP_CONCAT(t.id) id,
-		GROUP_CONCAT(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) SEPARATOR '#_ssp_#') title,
-		count(1) count,
-		GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
-		GROUP_CONCAT(IF(t.countType = '1',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title1,
-		SUM(IF(t.countType = '1',1,0)) count1,
-		GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
-		GROUP_CONCAT(IF(t.countType = '2',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title2,
-		SUM(IF(t.countType = '2',1,0)) count2,
-		GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
-		GROUP_CONCAT(IF(t.countType = '3',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title3,
-		SUM(IF(t.countType = '3',1,0)) count3
+		string_agg(t.id, ',') AS id,
+		string_agg(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), '#_ssp_#') AS title,
+		count(1) AS count,
+		string_agg(CASE WHEN t.countType = '1' THEN t.id ELSE NULL END, ',') AS id1,
+		string_agg(CASE WHEN t.countType = '1' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') AS title1,
+		SUM(CASE WHEN t.countType = '1' THEN 1 ELSE 0 END) AS count1,
+		string_agg(CASE WHEN t.countType = '2' THEN t.id ELSE NULL END, ',') AS id2,
+		string_agg(CASE WHEN t.countType = '2' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') AS title2,
+		SUM(CASE WHEN t.countType = '2' THEN 1 ELSE 0 END) AS count2,
+		string_agg(CASE WHEN t.countType = '3' THEN t.id ELSE NULL END, ',') AS id3,
+		string_agg(CASE WHEN t.countType = '3' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') AS title3,
+		SUM(CASE WHEN t.countType = '3' THEN 1 ELSE 0 END) AS count3
 		from (
 		SELECT al.id,al.title,
 		al.description,al.priority,al.dev_ip,
 		al.email,al.userId,al.userName,al.notice_type,al.stage,al.mobilePhoneNo,al.sendType,al.userType,
-		CASE when count &lt;= ${secondInterval} then '1'
-		when count &gt; ${secondInterval} and count &lt;= ${thirdInterval} then '2'
-		when count &gt; ${thirdInterval} then '3' else '' end as countType
+		CASE 
+		    WHEN count <= ${secondInterval} THEN '1'
+		    WHEN count > ${secondInterval} AND count <= ${thirdInterval} THEN '2'
+		    WHEN count > ${thirdInterval} THEN '3' 
+		    ELSE '' 
+		END AS countType
 		from (
 		SELECT ba.id,a.title,
-		a.description,sd.dict_label priority,a.dev_ip,
-		u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
-		CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
-		case WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') &gt; DATE_FORMAT(ba.end_time, '%Y-%m-%d') then 0
-		WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') = DATE_FORMAT(ba.end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time)
-		ELSE TIMESTAMPDIFF(MINUTE, ba.start_time, CONCAT( DATE_FORMAT(ba.start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(ba.end_time, '%T'))) +
-		( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; ba.start_time AND CAST(workday as datetime) &lt; ba.end_time ) * #{timeDifference} end count
+		a.description,sd.dict_label AS priority,a.dev_ip,
+		u.email,u.user_type AS userType,u.user_id AS userId,u.nick_name AS userName,u.phonenumber AS mobilePhoneNo,ba.notice_type,ba.stage,
+		CONCAT(
+		    CASE WHEN st.wechat_status = '1' THEN '1,' ELSE '' END,
+		    CASE WHEN st.phone_status = '1' THEN '2,' ELSE '' END,
+		    CASE WHEN st.email_status = '1' THEN '3,' ELSE '' END
+		) AS sendType,
+		CASE 
+		    WHEN to_char(ba.start_time, 'YYYY-MM-DD') > to_char(ba.end_time, 'YYYY-MM-DD') THEN 0
+		    WHEN to_char(ba.start_time, 'YYYY-MM-DD') = to_char(ba.end_time, 'YYYY-MM-DD') THEN 
+		        floor(extract(epoch from (ba.end_time - ba.start_time)) / 60)
+		    ELSE 
+		        floor(extract(epoch from (to_timestamp(to_char(ba.start_time, 'YYYY-MM-DD') || ' ' || to_char(ba.end_time, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') - ba.start_time)) / 60) +
+		        (SELECT COUNT(1) FROM s_workday WHERE CAST(workday AS timestamp) > ba.start_time AND CAST(workday AS timestamp) < ba.end_time) * #{timeDifference}
+		END AS count
 		from (
 		SELECT
 		au.id,
@@ -577,33 +588,49 @@
 		au.stage,
 		au.assign_id,
 		au.notice_type,
-		IF(w1.id is NULL,(SELECT CONCAT(MIN(workday),#{workBeginTime}) from s_workday WHERE workday &gt; au.start_time_),au.start_time_) start_time,
-		IF(w2.id is NULL,(SELECT CONCAT(MAX(workday),#{workEndTime}) from s_workday WHERE workday &lt; au.end_time_),au.end_time_) end_time
+		CASE WHEN w1.id is NULL THEN 
+		    (SELECT to_timestamp(MIN(workday) || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS') from s_workday WHERE workday > au.start_time_)
+		ELSE au.start_time_ END AS start_time,
+		CASE WHEN w2.id is NULL THEN 
+		    (SELECT to_timestamp(MAX(workday) || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS') from s_workday WHERE workday < au.end_time_)
+		ELSE au.end_time_ END AS end_time
 		from
 		(SELECT *,
-		CASE WHEN assign_time &lt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime})
-		WHEN  assign_time &gt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(assign_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
-		ELSE assign_time END as start_time_,
-		CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
-		WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
-		ELSE now() END as end_time_
+		CASE 
+		    WHEN assign_time < to_timestamp(to_char(assign_time, 'YYYY-MM-DD') || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS') 
+		        THEN to_timestamp(to_char(assign_time, 'YYYY-MM-DD') || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS')
+		    WHEN assign_time > to_timestamp(to_char(assign_time, 'YYYY-MM-DD') || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS')
+		        THEN to_timestamp(to_char(date_add('day', 1, assign_time), 'YYYY-MM-DD') || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS')
+		    ELSE assign_time 
+		END AS start_time_,
+		CASE 
+		    WHEN now() < to_timestamp(to_char(now(), 'YYYY-MM-DD') || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS')
+		        THEN to_timestamp(to_char(date_add('day', -1, now()), 'YYYY-MM-DD') || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS')
+		    WHEN now() > to_timestamp(to_char(now(), 'YYYY-MM-DD') || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS')
+		        THEN to_timestamp(to_char(now(), 'YYYY-MM-DD') || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS')
+		    ELSE now() 
+		END AS end_time_
 		from workbench_alert_user
 		where status = '2') au
-		LEFT JOIN s_workday w1 on w1.workday = DATE_FORMAT(au.start_time_, '%Y-%m-%d')
-		LEFT JOIN s_workday w2 on w2.workday = DATE_FORMAT(au.end_time_, '%Y-%m-%d')
+		LEFT JOIN s_workday w1 on w1.workday = to_char(au.start_time_, 'YYYY-MM-DD')
+		LEFT JOIN s_workday w2 on w2.workday = to_char(au.end_time_, 'YYYY-MM-DD')
 		) ba
 		INNER JOIN workbench_alert_info a on ba.alert_id = a.id and a.is_close = '0' and a.is_del = '0' <if test="nightFlg == 1">and a.is_night = '0'</if>
 		INNER JOIN sys_user u on ba.user_id = u.user_id
 		left join s_user_send_type st on st.user_id = u.user_id
 		LEFT JOIN sys_dict_data sd ON sd.dict_value = a.priority and sd.dict_type = 'alert_level' and sd.status = '1'
-		HAVING count &gt; ${firstInterval}
+		HAVING count > ${firstInterval}
 		<if test="nightFlg == 1">
 			union
 			SELECT ba.id,a.title,
-			a.description,dd.dict_label priority,a.dev_ip,
-			u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
-			CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
-			TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time) count
+			a.description,dd.dict_label AS priority,a.dev_ip,
+			u.email,u.user_type AS userType,u.user_id AS userId,u.nick_name AS userName,u.phonenumber AS mobilePhoneNo,ba.notice_type,ba.stage,
+			CONCAT(
+			    CASE WHEN st.wechat_status = '1' THEN '1,' ELSE '' END,
+			    CASE WHEN st.phone_status = '1' THEN '2,' ELSE '' END,
+			    CASE WHEN st.email_status = '1' THEN '3,' ELSE '' END
+			) AS sendType,
+			floor(extract(epoch from (ba.end_time - ba.start_time)) / 60) AS count
 			from (
 			SELECT
 			au.id,
@@ -614,8 +641,8 @@
 			au.stage,
 			au.assign_id,
 			au.notice_type,
-			au.assign_time start_time,
-			now() end_time
+			au.assign_time AS start_time,
+			now() AS end_time
 			from workbench_alert_user au
 			where status = '2'
 			) ba
@@ -623,7 +650,7 @@
 			INNER JOIN sys_user u on ba.user_id = u.user_id
 			left join s_user_send_type st on st.user_id = u.user_id
 			LEFT JOIN sys_dict_data dd ON dd.dict_value = a.priority and dd.dict_type = 'alert_level' and dd.status = '1'
-			HAVING count &gt; ${firstInterval}
+			HAVING count > ${firstInterval}
 		</if>
 		) al
 		HAVING countType != al.notice_type or al.notice_type is NULL
@@ -913,34 +940,45 @@
 
 	<select id="getNoticeAlertsFollow" resultType="java.util.Map">
 		SELECT t.userId,t.email,t.mobilePhoneNo,t.userName,t.userType,t.sendType,
-		GROUP_CONCAT(t.id) id,
-		GROUP_CONCAT(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) SEPARATOR '#_ssp_#') title,
-		count(1) count,
-		GROUP_CONCAT(IF(t.countType = '1',t.id,NULL)) id1,
-		GROUP_CONCAT(IF(t.countType = '1',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title1,
-		SUM(IF(t.countType = '1',1,0)) count1,
-		GROUP_CONCAT(IF(t.countType = '2',t.id,NULL)) id2,
-		GROUP_CONCAT(IF(t.countType = '2',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title2,
-		SUM(IF(t.countType = '2',1,0)) count2,
-		GROUP_CONCAT(IF(t.countType = '3',t.id,NULL)) id3,
-		GROUP_CONCAT(IF(t.countType = '3',CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), NULL ) SEPARATOR '#_ssp_#' ) title3,
-		SUM(IF(t.countType = '3',1,0)) count3
+		string_agg(t.id, ',') AS id,
+		string_agg(CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description), '#_ssp_#') AS title,
+		count(1) AS count,
+		string_agg(CASE WHEN t.countType = '1' THEN t.id ELSE NULL END, ',') AS id1,
+		string_agg(CASE WHEN t.countType = '1' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') AS title1,
+		SUM(CASE WHEN t.countType = '1' THEN 1 ELSE 0 END) AS count1,
+		string_agg(CASE WHEN t.countType = '2' THEN t.id ELSE NULL END, ',') AS id2,
+		string_agg(CASE WHEN t.countType = '2' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') AS title2,
+		SUM(CASE WHEN t.countType = '2' THEN 1 ELSE 0 END) AS count2,
+		string_agg(CASE WHEN t.countType = '3' THEN t.id ELSE NULL END, ',') AS id3,
+		string_agg(CASE WHEN t.countType = '3' THEN CONCAT_WS('@_ssp_@',t.title,t.priority,t.dev_ip,t.description) ELSE NULL END, '#_ssp_#') AS title3,
+		SUM(CASE WHEN t.countType = '3' THEN 1 ELSE 0 END) AS count3
 		from (
 		SELECT al.id,al.title,
 		al.description,al.priority,al.dev_ip,
 		al.email,al.userId,al.userName,al.notice_type,al.stage,al.mobilePhoneNo,al.sendType,al.userType,
-		CASE when count &lt;= ${secondInterval} then '1'
-		when count &gt; ${secondInterval} and count &lt;= ${thirdInterval} then '2'
-		when count &gt; ${thirdInterval} then '3' else '' end as countType
+		CASE 
+		    WHEN count <= ${secondInterval} THEN '1'
+		    WHEN count > ${secondInterval} AND count <= ${thirdInterval} THEN '2'
+		    WHEN count > ${thirdInterval} THEN '3' 
+		    ELSE '' 
+		END AS countType
 		from (
 		SELECT ba.id,a.title,
-		a.description,sd.dict_label priority,a.dev_ip,
-		u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
-		CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
-		case WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') &gt; DATE_FORMAT(ba.end_time, '%Y-%m-%d') then 0
-		WHEN DATE_FORMAT(ba.start_time, '%Y-%m-%d') = DATE_FORMAT(ba.end_time, '%Y-%m-%d') then TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time)
-		ELSE TIMESTAMPDIFF(MINUTE, ba.start_time, CONCAT( DATE_FORMAT(ba.start_time, '%Y-%m-%d'), ' ', DATE_FORMAT(ba.end_time, '%T'))) +
-		( SELECT COUNT(1) FROM s_workday WHERE CAST(workday as datetime) &gt; ba.start_time AND CAST(workday as datetime) &lt; ba.end_time ) * #{timeDifference} end count
+		a.description,sd.dict_label AS priority,a.dev_ip,
+		u.email,u.user_type AS userType,u.user_id AS userId,u.nick_name AS userName,u.phonenumber AS mobilePhoneNo,ba.notice_type,ba.stage,
+		CONCAT(
+		    CASE WHEN st.wechat_status = '1' THEN '1,' ELSE '' END,
+		    CASE WHEN st.phone_status = '1' THEN '2,' ELSE '' END,
+		    CASE WHEN st.email_status = '1' THEN '3,' ELSE '' END
+		) AS sendType,
+		CASE 
+		    WHEN to_char(ba.start_time, 'YYYY-MM-DD') > to_char(ba.end_time, 'YYYY-MM-DD') THEN 0
+		    WHEN to_char(ba.start_time, 'YYYY-MM-DD') = to_char(ba.end_time, 'YYYY-MM-DD') THEN 
+		        floor(extract(epoch from (ba.end_time - ba.start_time)) / 60)
+		    ELSE 
+		        floor(extract(epoch from (to_timestamp(to_char(ba.start_time, 'YYYY-MM-DD') || ' ' || to_char(ba.end_time, 'HH24:MI:SS'), 'YYYY-MM-DD HH24:MI:SS') - ba.start_time)) / 60) +
+		        (SELECT COUNT(1) FROM s_workday WHERE CAST(workday AS timestamp) > ba.start_time AND CAST(workday AS timestamp) < ba.end_time) * #{timeDifference}
+		END AS count
 		from (
 		SELECT
 		au.id,
@@ -951,16 +989,24 @@
 		au.stage,
 		au.assign_id,
 		au.notice_type,
-		au.start_time_ start_time,
-		au.end_time_ end_time
+		au.start_time_ AS start_time,
+		au.end_time_ AS end_time
 		from
 		(SELECT *,
-		CASE WHEN assign_time &lt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workBeginTime})
-		WHEN  assign_time &gt; CONCAT(DATE_FORMAT(assign_time, '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(date_add(assign_time, interval 1 day), '%Y-%m-%d'),#{workBeginTime})
-		ELSE assign_time END as start_time_,
-		CASE WHEN now() &lt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workBeginTime}) then CONCAT(DATE_FORMAT(date_add(now(), interval -1 day), '%Y-%m-%d'),#{workEndTime})
-		WHEN  now() &gt; CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime}) then CONCAT(DATE_FORMAT(now(), '%Y-%m-%d'),#{workEndTime})
-		ELSE now() END as end_time_
+		CASE 
+		    WHEN assign_time < to_timestamp(to_char(assign_time, 'YYYY-MM-DD') || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS') 
+		        THEN to_timestamp(to_char(assign_time, 'YYYY-MM-DD') || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS')
+		    WHEN assign_time > to_timestamp(to_char(assign_time, 'YYYY-MM-DD') || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS')
+		        THEN to_timestamp(to_char(date_add('day', 1, assign_time), 'YYYY-MM-DD') || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS')
+		    ELSE assign_time 
+		END AS start_time_,
+		CASE 
+		    WHEN now() < to_timestamp(to_char(now(), 'YYYY-MM-DD') || #{workBeginTime}, 'YYYY-MM-DD HH24:MI:SS')
+		        THEN to_timestamp(to_char(date_add('day', -1, now()), 'YYYY-MM-DD') || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS')
+		    WHEN now() > to_timestamp(to_char(now(), 'YYYY-MM-DD') || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS')
+		        THEN to_timestamp(to_char(now(), 'YYYY-MM-DD') || #{workEndTime}, 'YYYY-MM-DD HH24:MI:SS')
+		    ELSE now() 
+		END AS end_time_
 		from workbench_alert_user
 		where status = '2') au
 		) ba
@@ -968,14 +1014,18 @@
 		INNER JOIN sys_user u on ba.user_id = u.user_id
 		left join s_user_send_type st on st.user_id = u.user_id
 		LEFT JOIN sys_dict_data sd ON sd.dict_value = a.priority and sd.dict_type = 'alert_level' and sd.status = '1'
-		HAVING count &gt; ${firstInterval}
+		HAVING count > ${firstInterval}
 		<if test="nightFlg == 1">
 			union
 			SELECT ba.id,a.title,
-			a.description,dd.dict_label priority,a.dev_ip,
-			u.email,u.user_type as userType,u.user_id as userId,u.nick_name as userName,u.phonenumber as mobilePhoneNo,ba.notice_type,ba.stage,
-			CONCAT(IF(st.wechat_status = '1','1,',''),IF(st.phone_status = '1','2,',''),IF(st.email_status = '1','3,','')) sendType,
-			TIMESTAMPDIFF(MINUTE, ba.start_time, ba.end_time) count
+			a.description,dd.dict_label AS priority,a.dev_ip,
+			u.email,u.user_type AS userType,u.user_id AS userId,u.nick_name AS userName,u.phonenumber AS mobilePhoneNo,ba.notice_type,ba.stage,
+			CONCAT(
+			    CASE WHEN st.wechat_status = '1' THEN '1,' ELSE '' END,
+			    CASE WHEN st.phone_status = '1' THEN '2,' ELSE '' END,
+			    CASE WHEN st.email_status = '1' THEN '3,' ELSE '' END
+			) AS sendType,
+			floor(extract(epoch from (ba.end_time - ba.start_time)) / 60) AS count
 			from (
 			SELECT
 			au.id,
@@ -986,8 +1036,8 @@
 			au.stage,
 			au.assign_id,
 			au.notice_type,
-			au.assign_time start_time,
-			now() end_time
+			au.assign_time AS start_time,
+			now() AS end_time
 			from workbench_alert_user au
 			where status = '2'
 			) ba
@@ -995,7 +1045,7 @@
 			INNER JOIN sys_user u on ba.user_id = u.user_id
 			left join s_user_send_type st on st.user_id = u.user_id
 			LEFT JOIN sys_dict_data dd ON dd.dict_value = a.priority and dd.dict_type = 'alert_level' and dd.status = '1'
-			HAVING count &gt; ${firstInterval}
+			HAVING count > ${firstInterval}
 		</if>
 		) al
 		HAVING countType != al.notice_type or al.notice_type is NULL
