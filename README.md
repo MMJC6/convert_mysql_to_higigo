@@ -82,5 +82,6 @@
 
 ### 6. 转换结果回写
 
-- 将二次转换结果每个文件夹下的 code_blocks_new 回写到对应的 xml 文件中。
-- 按照文件夹名称和文件名称找到对应关系，如 AlertMapper_conversion/code_blocks_new/assessmentTaskNotice.sql 的内容需要回写到 alert/AlertMapper.xml 中的<select id="assessmentTaskNotice">标签中。
+- 将 alert_convert_workspace/new_code_blocks/code_blocks_new中每个文件的内容 回写到对应的 xml 文件中。
+- 按照文件名称找到对应关系，如 assessmentTaskNotice.sql 的内容需要回写到 alert/AlertMapper.xml 中的<select id="assessmentTaskNotice">标签中。
+- 注意sql语句中的< > 等在xml中应该替换为转义字符对应的 &lt; &gt; &amp;
