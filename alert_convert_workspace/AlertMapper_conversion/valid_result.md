@@ -1,10 +1,10 @@
 # Validation Report - AlertMapper Conversion
 
 ## Overview
-- Validation Time: $(date '+%Y-%m-%d %H:%M:%S')
-- Total Files: 1
-- Total Functions Converted: 28
-- Overall Progress: 1.85% (1/54 files)
+- Validation Time: 2025-02-14 05:51
+- Total Files: 2
+- Total Functions Converted: 29
+- Overall Progress: 3.7% (2/54 files)
 
 ## Validation Results by File
 
@@ -23,9 +23,24 @@
 | Division by Zero | ✅ | None |
 | REPLACE INTO | N/A | None |
 
+### 2. selectNightAlertConfig.sql
+| Check Category | Status | Issues |
+|---------------|---------|---------|
+| Function Replacements | ✅ | None |
+| Statement Structure | ✅ | None |
+| Value Conversions | ✅ | None |
+| Query Structure | ✅ | None |
+| Identifiers | ✅ | None |
+| Special Rules | ✅ | None |
+| UUID Conversion | N/A | None |
+| Type Conversion | ✅ | None |
+| Alias Handling | ✅ | None |
+| Division by Zero | N/A | None |
+| REPLACE INTO | N/A | None |
+
 ## Function Conversion Summary
 - GROUP_CONCAT → string_agg: 7 conversions
-- DATE_FORMAT → to_char: 8 conversions
+- DATE_FORMAT → to_char: 9 conversions
 - IFNULL → COALESCE: 0 conversions
 - TIMESTAMPDIFF → extract epoch: 2 conversions
 - IF → CASE WHEN: 9 conversions
@@ -34,7 +49,7 @@
 ## Value Conversion Summary
 - Status values converted to strings: 4 instances (already in string format)
 - Backticks removed: 0 instances (none present)
-- Explicit AS added: 28 instances
+- Explicit AS added: 29 instances
 
 ## Recheck List
 No files requiring recheck.
@@ -45,3 +60,5 @@ No files requiring recheck.
 3. Explicit AS keywords added for all aliases
 4. XML entities preserved
 5. Query structure and logic maintained
+6. Simple conversions handled correctly
+7. Test cases validate all changes
