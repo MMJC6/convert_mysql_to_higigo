@@ -1,0 +1,1 @@
+update tbl_sequence set `key` = #{lrecepttime,jdbcType=BIGINT} where sequence_name = 'dbg_lrecepttime'

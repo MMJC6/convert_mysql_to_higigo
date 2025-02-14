@@ -1,0 +1,1 @@
+DELETE FROM workbench_alert_info_temporary

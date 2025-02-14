@@ -1,0 +1,1 @@
+update tbl_sequence set value = '0' where sequence_name = 'alert_rule_change'

@@ -1,0 +1,1 @@
+insert into alert_notice_record (id) values

@@ -1,0 +1,1 @@
+SELECT COUNT(1) from workbench_alert_info i where i.`status` != '0' and i.is_close = '0' and is_epicycle_end = '0'

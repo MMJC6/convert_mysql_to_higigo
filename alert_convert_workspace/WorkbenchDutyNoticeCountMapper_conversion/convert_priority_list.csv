@@ -1,0 +1,4 @@
+id,source_file,block_file,line_count,priority,found_functions
+selectDutyNoticeCount,WorkbenchDutyNoticeCountMapper.xml,selectDutyNoticeCount.sql,1,high,
+insertbatch,WorkbenchDutyNoticeCountMapper.xml,insertbatch.sql,2,high,
+deleteDutyNoticeCount,WorkbenchDutyNoticeCountMapper.xml,deleteDutyNoticeCount.sql,1,high,

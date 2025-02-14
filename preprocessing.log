@@ -1,0 +1,230 @@
+2025-02-14 10:25:17,736 [INFO] xml_preprocessor.py:132 - Starting XML preprocessing from alert
+2025-02-14 10:25:17,741 [INFO] xml_preprocessor.py:114 - Processed alert/WorkbenchNoticeSendBatchMapper.xml: 1 blocks extracted
+2025-02-14 10:25:17,753 [INFO] xml_preprocessor.py:114 - Processed alert/AlertMapper.xml: 61 blocks extracted
+2025-02-14 10:25:17,757 [INFO] xml_preprocessor.py:114 - Processed alert/WorkbenchAlertUserMapper.xml: 3 blocks extracted
+2025-02-14 10:25:17,761 [INFO] xml_preprocessor.py:114 - Processed alert/WorkbenchAlertAssignMapper.xml: 1 blocks extracted
+2025-02-14 10:25:17,767 [INFO] xml_preprocessor.py:114 - Processed alert/WorkbenchDutyNoticeCountMapper.xml: 3 blocks extracted
+2025-02-14 10:25:17,771 [INFO] xml_preprocessor.py:114 - Processed alert/WorkbenchNoticeSendRecordMapper.xml: 4 blocks extracted
+2025-02-14 10:25:17,776 [INFO] xml_preprocessor.py:114 - Processed alert/WorkbenchAlertOperationLogMapper.xml: 1 blocks extracted
+2025-02-14 10:25:17,783 [INFO] xml_preprocessor.py:114 - Processed alert/WorkbenchScheduleTaskMapper.xml: 25 blocks extracted
+2025-02-14 10:25:17,783 [INFO] xml_preprocessor.py:141 - Preprocessing completed
+2025-02-14 10:26:36,407 [INFO] xml_preprocessor.py:140 - Starting XML preprocessing from alert
+2025-02-14 10:26:36,413 [INFO] xml_preprocessor.py:115 - Processed alert/WorkbenchNoticeSendBatchMapper.xml: 1 blocks extracted
+2025-02-14 10:26:36,425 [INFO] xml_preprocessor.py:115 - Processed alert/AlertMapper.xml: 61 blocks extracted
+2025-02-14 10:26:36,429 [INFO] xml_preprocessor.py:115 - Processed alert/WorkbenchAlertUserMapper.xml: 3 blocks extracted
+2025-02-14 10:26:36,433 [INFO] xml_preprocessor.py:115 - Processed alert/WorkbenchAlertAssignMapper.xml: 1 blocks extracted
+2025-02-14 10:26:36,437 [INFO] xml_preprocessor.py:115 - Processed alert/WorkbenchDutyNoticeCountMapper.xml: 3 blocks extracted
+2025-02-14 10:26:36,442 [INFO] xml_preprocessor.py:115 - Processed alert/WorkbenchNoticeSendRecordMapper.xml: 4 blocks extracted
+2025-02-14 10:26:36,446 [INFO] xml_preprocessor.py:115 - Processed alert/WorkbenchAlertOperationLogMapper.xml: 1 blocks extracted
+2025-02-14 10:26:36,453 [INFO] xml_preprocessor.py:115 - Processed alert/WorkbenchScheduleTaskMapper.xml: 25 blocks extracted
+2025-02-14 10:26:36,453 [INFO] xml_preprocessor.py:149 - Preprocessing completed
+2025-02-14 10:30:06,371 [INFO] xml_preprocessor.py:153 - Starting XML preprocessing from alert
+2025-02-14 10:30:06,376 [ERROR] xml_preprocessor.py:139 - Error processing alert/WorkbenchNoticeSendBatchMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchNoticeSendBatchMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:30:06,586 [ERROR] xml_preprocessor.py:139 - Error processing alert/AlertMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/AlertMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:30:06,598 [ERROR] xml_preprocessor.py:139 - Error processing alert/WorkbenchAlertUserMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertUserMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:30:06,602 [ERROR] xml_preprocessor.py:139 - Error processing alert/WorkbenchAlertAssignMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertAssignMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:30:06,614 [ERROR] xml_preprocessor.py:139 - Error processing alert/WorkbenchDutyNoticeCountMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchDutyNoticeCountMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:30:06,633 [ERROR] xml_preprocessor.py:139 - Error processing alert/WorkbenchNoticeSendRecordMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchNoticeSendRecordMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:30:06,637 [ERROR] xml_preprocessor.py:139 - Error processing alert/WorkbenchAlertOperationLogMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertOperationLogMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:30:06,724 [ERROR] xml_preprocessor.py:139 - Error processing alert/WorkbenchScheduleTaskMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchScheduleTaskMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:30:06,724 [INFO] xml_preprocessor.py:164 - Preprocessing completed
+2025-02-14 10:46:10,274 [INFO] xml_preprocessor.py:165 - Starting XML preprocessing from alert
+2025-02-14 10:46:10,278 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block insert
+2025-02-14 10:46:10,279 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchNoticeSendBatchMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchNoticeSendBatchMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:46:10,283 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectNightAlertConfig
+2025-02-14 10:46:10,291 [INFO] xml_preprocessor.py:107 - Found functions {'IFNULL'} in block selectUnNightUnClose
+2025-02-14 10:46:10,305 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectAlertNotice
+2025-02-14 10:46:10,312 [INFO] xml_preprocessor.py:107 - Found functions {'IF'} in block selectUserByRuleId
+2025-02-14 10:46:10,319 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectFilterList
+2025-02-14 10:46:10,341 [INFO] xml_preprocessor.py:107 - Found functions {'limit'} in block selectRecurrentAlert
+2025-02-14 10:46:10,344 [INFO] xml_preprocessor.py:107 - Found functions {'IFNULL'} in block selectRepetitive
+2025-02-14 10:46:10,348 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT'} in block selectMayEndInfos
+2025-02-14 10:46:10,351 [INFO] xml_preprocessor.py:107 - Found functions {'date_format', 'IFNULL', 'TIMESTAMPDIFF'} in block getAllAlertUsers
+2025-02-14 10:46:10,355 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT', 'IFNULL'} in block selectNotAssignAlert
+2025-02-14 10:46:10,358 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT'} in block selectNeedNoticeAlert
+2025-02-14 10:46:10,365 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT', 'IF', 'DATE_FORMAT', 'date_add', 'TIMESTAMPDIFF'} in block getNoticeAlerts
+2025-02-14 10:46:10,447 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT', 'if'} in block selectNoAssignPersonAlert
+2025-02-14 10:46:10,461 [INFO] xml_preprocessor.py:107 - Found functions {'TIMESTAMPDIFF', 'IFNULL', 'STR_TO_DATE'} in block assessmentTaskNotice
+2025-02-14 10:46:10,466 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT'} in block selectEventAlertRepeat
+2025-02-14 10:46:10,474 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectNoticedEventAlertRepeat
+2025-02-14 10:46:10,478 [INFO] xml_preprocessor.py:107 - Found functions {'IFNULL'} in block selectUnMatchingMul
+2025-02-14 10:46:10,482 [INFO] xml_preprocessor.py:107 - Found functions {'limit', 'IFNULL'} in block getNoAlertSpace
+2025-02-14 10:46:10,493 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT'} in block getReportAlertDetail
+2025-02-14 10:46:10,501 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT', 'IF', 'DATE_FORMAT', 'date_add', 'TIMESTAMPDIFF'} in block getNoticeAlertsFollow
+2025-02-14 10:46:10,544 [INFO] xml_preprocessor.py:107 - Found functions {'date_add', 'TIMESTAMPDIFF'} in block setImportantLevel
+2025-02-14 10:46:10,554 [ERROR] xml_preprocessor.py:151 - Error processing alert/AlertMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/AlertMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:46:10,558 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchAlertUserMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertUserMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:46:10,562 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchAlertAssignMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertAssignMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:46:10,573 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchDutyNoticeCountMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchDutyNoticeCountMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:46:10,578 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_ADD'} in block selectNotUpdatedRecord
+2025-02-14 10:46:10,581 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchNoticeSendRecordMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchNoticeSendRecordMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:46:10,586 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchAlertOperationLogMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertOperationLogMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:46:10,590 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT', 'date_add'} in block selectWillCaculate
+2025-02-14 10:46:10,597 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectWorkDayByTaskTime
+2025-02-14 10:46:10,601 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectCountByDay
+2025-02-14 10:46:10,604 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectDutysByUserId
+2025-02-14 10:46:10,608 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectDutyCountByTime
+2025-02-14 10:46:10,612 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectDutysByRole
+2025-02-14 10:46:10,650 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block deleteAllScheduleByExecutorId
+2025-02-14 10:46:10,654 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchScheduleTaskMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchScheduleTaskMapper_conversion_v1/priority_list.csv'
+2025-02-14 10:46:10,654 [INFO] xml_preprocessor.py:176 - Preprocessing completed
+2025-02-14 10:51:21,042 [INFO] xml_preprocessor.py:165 - Starting XML preprocessing from alert
+2025-02-14 10:51:21,047 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block insert
+2025-02-14 10:51:21,050 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchNoticeSendBatchMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchNoticeSendBatchMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:51:21,055 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectNightAlertConfig
+2025-02-14 10:51:21,062 [INFO] xml_preprocessor.py:107 - Found functions {'IFNULL'} in block selectUnNightUnClose
+2025-02-14 10:51:21,077 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectAlertNotice
+2025-02-14 10:51:21,084 [INFO] xml_preprocessor.py:107 - Found functions {'IF'} in block selectUserByRuleId
+2025-02-14 10:51:21,091 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectFilterList
+2025-02-14 10:51:21,112 [INFO] xml_preprocessor.py:107 - Found functions {'limit'} in block selectRecurrentAlert
+2025-02-14 10:51:21,115 [INFO] xml_preprocessor.py:107 - Found functions {'IFNULL'} in block selectRepetitive
+2025-02-14 10:51:21,119 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT'} in block selectMayEndInfos
+2025-02-14 10:51:21,123 [INFO] xml_preprocessor.py:107 - Found functions {'TIMESTAMPDIFF', 'IFNULL', 'date_format'} in block getAllAlertUsers
+2025-02-14 10:51:21,127 [INFO] xml_preprocessor.py:107 - Found functions {'IFNULL', 'GROUP_CONCAT'} in block selectNotAssignAlert
+2025-02-14 10:51:21,130 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT'} in block selectNeedNoticeAlert
+2025-02-14 10:51:21,138 [INFO] xml_preprocessor.py:107 - Found functions {'TIMESTAMPDIFF', 'date_add', 'IF', 'GROUP_CONCAT', 'DATE_FORMAT'} in block getNoticeAlerts
+2025-02-14 10:51:21,153 [INFO] xml_preprocessor.py:107 - Found functions {'if', 'GROUP_CONCAT'} in block selectNoAssignPersonAlert
+2025-02-14 10:51:21,163 [INFO] xml_preprocessor.py:107 - Found functions {'TIMESTAMPDIFF', 'IFNULL', 'STR_TO_DATE'} in block assessmentTaskNotice
+2025-02-14 10:51:21,167 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT'} in block selectEventAlertRepeat
+2025-02-14 10:51:21,170 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectNoticedEventAlertRepeat
+2025-02-14 10:51:21,173 [INFO] xml_preprocessor.py:107 - Found functions {'IFNULL'} in block selectUnMatchingMul
+2025-02-14 10:51:21,177 [INFO] xml_preprocessor.py:107 - Found functions {'IFNULL', 'limit'} in block getNoAlertSpace
+2025-02-14 10:51:21,188 [INFO] xml_preprocessor.py:107 - Found functions {'GROUP_CONCAT'} in block getReportAlertDetail
+2025-02-14 10:51:21,195 [INFO] xml_preprocessor.py:107 - Found functions {'TIMESTAMPDIFF', 'date_add', 'IF', 'GROUP_CONCAT', 'DATE_FORMAT'} in block getNoticeAlertsFollow
+2025-02-14 10:51:21,236 [INFO] xml_preprocessor.py:107 - Found functions {'date_add', 'TIMESTAMPDIFF'} in block setImportantLevel
+2025-02-14 10:51:21,249 [ERROR] xml_preprocessor.py:151 - Error processing alert/AlertMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/AlertMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:51:21,254 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchAlertUserMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertUserMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:51:21,260 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchAlertAssignMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertAssignMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:51:21,272 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchDutyNoticeCountMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchDutyNoticeCountMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:51:21,275 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_ADD'} in block selectNotUpdatedRecord
+2025-02-14 10:51:21,279 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchNoticeSendRecordMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchNoticeSendRecordMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:51:21,283 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchAlertOperationLogMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertOperationLogMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:51:21,288 [INFO] xml_preprocessor.py:107 - Found functions {'date_add', 'DATE_FORMAT'} in block selectWillCaculate
+2025-02-14 10:51:21,295 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectWorkDayByTaskTime
+2025-02-14 10:51:21,299 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectCountByDay
+2025-02-14 10:51:21,302 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectDutysByUserId
+2025-02-14 10:51:21,306 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectDutyCountByTime
+2025-02-14 10:51:21,309 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block selectDutysByRole
+2025-02-14 10:51:21,348 [INFO] xml_preprocessor.py:107 - Found functions {'DATE_FORMAT'} in block deleteAllScheduleByExecutorId
+2025-02-14 10:51:21,352 [ERROR] xml_preprocessor.py:151 - Error processing alert/WorkbenchScheduleTaskMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchScheduleTaskMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:51:21,352 [INFO] xml_preprocessor.py:176 - Preprocessing completed
+2025-02-14 10:55:56,157 [INFO] xml_preprocessor.py:167 - Starting XML preprocessing from alert
+2025-02-14 10:55:56,162 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block insert
+2025-02-14 10:55:56,163 [ERROR] xml_preprocessor.py:153 - Error processing alert/WorkbenchNoticeSendBatchMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchNoticeSendBatchMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:55:56,167 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectNightAlertConfig
+2025-02-14 10:55:56,174 [INFO] xml_preprocessor.py:109 - Found functions {'IFNULL'} in block selectUnNightUnClose
+2025-02-14 10:55:56,189 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectAlertNotice
+2025-02-14 10:55:56,196 [INFO] xml_preprocessor.py:109 - Found functions {'IF'} in block selectUserByRuleId
+2025-02-14 10:55:56,203 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectFilterList
+2025-02-14 10:55:56,225 [INFO] xml_preprocessor.py:109 - Found functions {'limit'} in block selectRecurrentAlert
+2025-02-14 10:55:56,229 [INFO] xml_preprocessor.py:109 - Found functions {'IFNULL'} in block selectRepetitive
+2025-02-14 10:55:56,232 [INFO] xml_preprocessor.py:109 - Found functions {'GROUP_CONCAT'} in block selectMayEndInfos
+2025-02-14 10:55:56,236 [INFO] xml_preprocessor.py:109 - Found functions {'TIMESTAMPDIFF', 'IFNULL', 'date_format'} in block getAllAlertUsers
+2025-02-14 10:55:56,239 [INFO] xml_preprocessor.py:109 - Found functions {'GROUP_CONCAT', 'IFNULL'} in block selectNotAssignAlert
+2025-02-14 10:55:56,242 [INFO] xml_preprocessor.py:109 - Found functions {'GROUP_CONCAT'} in block selectNeedNoticeAlert
+2025-02-14 10:55:56,251 [INFO] xml_preprocessor.py:109 - Found functions {'date_add', 'DATE_FORMAT', 'TIMESTAMPDIFF', 'GROUP_CONCAT', 'IF'} in block getNoticeAlerts
+2025-02-14 10:55:56,266 [INFO] xml_preprocessor.py:109 - Found functions {'GROUP_CONCAT', 'if'} in block selectNoAssignPersonAlert
+2025-02-14 10:55:56,276 [INFO] xml_preprocessor.py:109 - Found functions {'TIMESTAMPDIFF', 'IFNULL', 'STR_TO_DATE'} in block assessmentTaskNotice
+2025-02-14 10:55:56,280 [INFO] xml_preprocessor.py:109 - Found functions {'GROUP_CONCAT'} in block selectEventAlertRepeat
+2025-02-14 10:55:56,283 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectNoticedEventAlertRepeat
+2025-02-14 10:55:56,287 [INFO] xml_preprocessor.py:109 - Found functions {'IFNULL'} in block selectUnMatchingMul
+2025-02-14 10:55:56,290 [INFO] xml_preprocessor.py:109 - Found functions {'IFNULL', 'limit'} in block getNoAlertSpace
+2025-02-14 10:55:56,301 [INFO] xml_preprocessor.py:109 - Found functions {'GROUP_CONCAT'} in block getReportAlertDetail
+2025-02-14 10:55:56,309 [INFO] xml_preprocessor.py:109 - Found functions {'date_add', 'DATE_FORMAT', 'TIMESTAMPDIFF', 'GROUP_CONCAT', 'IF'} in block getNoticeAlertsFollow
+2025-02-14 10:55:56,351 [INFO] xml_preprocessor.py:109 - Found functions {'TIMESTAMPDIFF', 'date_add'} in block setImportantLevel
+2025-02-14 10:55:56,362 [ERROR] xml_preprocessor.py:153 - Error processing alert/AlertMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/AlertMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:55:56,366 [ERROR] xml_preprocessor.py:153 - Error processing alert/WorkbenchAlertUserMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertUserMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:55:56,370 [ERROR] xml_preprocessor.py:153 - Error processing alert/WorkbenchAlertAssignMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertAssignMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:55:56,380 [ERROR] xml_preprocessor.py:153 - Error processing alert/WorkbenchDutyNoticeCountMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchDutyNoticeCountMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:55:56,384 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_ADD'} in block selectNotUpdatedRecord
+2025-02-14 10:55:56,388 [ERROR] xml_preprocessor.py:153 - Error processing alert/WorkbenchNoticeSendRecordMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchNoticeSendRecordMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:55:56,391 [ERROR] xml_preprocessor.py:153 - Error processing alert/WorkbenchAlertOperationLogMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchAlertOperationLogMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:55:56,395 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT', 'date_add'} in block selectWillCaculate
+2025-02-14 10:55:56,403 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectWorkDayByTaskTime
+2025-02-14 10:55:56,406 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectCountByDay
+2025-02-14 10:55:56,410 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectDutysByUserId
+2025-02-14 10:55:56,414 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectDutyCountByTime
+2025-02-14 10:55:56,417 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block selectDutysByRole
+2025-02-14 10:55:56,455 [INFO] xml_preprocessor.py:109 - Found functions {'DATE_FORMAT'} in block deleteAllScheduleByExecutorId
+2025-02-14 10:55:56,458 [ERROR] xml_preprocessor.py:153 - Error processing alert/WorkbenchScheduleTaskMapper.xml: [Errno 2] No such file or directory: 'alert_convert_workspace/WorkbenchScheduleTaskMapper_conversion_v1/convert_priority_list.csv'
+2025-02-14 10:55:56,458 [INFO] xml_preprocessor.py:178 - Preprocessing completed
+2025-02-14 11:00:48,984 [INFO] xml_preprocessor.py:153 - Starting XML preprocessing from alert
+2025-02-14 11:00:48,989 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block insert
+2025-02-14 11:00:48,990 [INFO] xml_preprocessor.py:136 - Processed alert/WorkbenchNoticeSendBatchMapper.xml: 1 blocks extracted
+2025-02-14 11:00:48,994 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectNightAlertConfig
+2025-02-14 11:00:49,001 [INFO] xml_preprocessor.py:102 - Found functions {'IFNULL'} in block selectUnNightUnClose
+2025-02-14 11:00:49,016 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectAlertNotice
+2025-02-14 11:00:49,024 [INFO] xml_preprocessor.py:102 - Found functions {'IF'} in block selectUserByRuleId
+2025-02-14 11:00:49,031 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectFilterList
+2025-02-14 11:00:49,055 [INFO] xml_preprocessor.py:102 - Found functions {'limit'} in block selectRecurrentAlert
+2025-02-14 11:00:49,058 [INFO] xml_preprocessor.py:102 - Found functions {'IFNULL'} in block selectRepetitive
+2025-02-14 11:00:49,061 [INFO] xml_preprocessor.py:102 - Found functions {'GROUP_CONCAT'} in block selectMayEndInfos
+2025-02-14 11:00:49,065 [INFO] xml_preprocessor.py:102 - Found functions {'TIMESTAMPDIFF', 'IFNULL', 'date_format'} in block getAllAlertUsers
+2025-02-14 11:00:49,069 [INFO] xml_preprocessor.py:102 - Found functions {'GROUP_CONCAT', 'IFNULL'} in block selectNotAssignAlert
+2025-02-14 11:00:49,072 [INFO] xml_preprocessor.py:102 - Found functions {'GROUP_CONCAT'} in block selectNeedNoticeAlert
+2025-02-14 11:00:49,080 [INFO] xml_preprocessor.py:102 - Found functions {'IF', 'GROUP_CONCAT', 'DATE_FORMAT', 'TIMESTAMPDIFF', 'date_add'} in block getNoticeAlerts
+2025-02-14 11:00:49,095 [INFO] xml_preprocessor.py:102 - Found functions {'GROUP_CONCAT', 'if'} in block selectNoAssignPersonAlert
+2025-02-14 11:00:49,105 [INFO] xml_preprocessor.py:102 - Found functions {'STR_TO_DATE', 'TIMESTAMPDIFF', 'IFNULL'} in block assessmentTaskNotice
+2025-02-14 11:00:49,108 [INFO] xml_preprocessor.py:102 - Found functions {'GROUP_CONCAT'} in block selectEventAlertRepeat
+2025-02-14 11:00:49,112 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectNoticedEventAlertRepeat
+2025-02-14 11:00:49,115 [INFO] xml_preprocessor.py:102 - Found functions {'IFNULL'} in block selectUnMatchingMul
+2025-02-14 11:00:49,119 [INFO] xml_preprocessor.py:102 - Found functions {'limit', 'IFNULL'} in block getNoAlertSpace
+2025-02-14 11:00:49,129 [INFO] xml_preprocessor.py:102 - Found functions {'GROUP_CONCAT'} in block getReportAlertDetail
+2025-02-14 11:00:49,136 [INFO] xml_preprocessor.py:102 - Found functions {'IF', 'GROUP_CONCAT', 'DATE_FORMAT', 'TIMESTAMPDIFF', 'date_add'} in block getNoticeAlertsFollow
+2025-02-14 11:00:49,178 [INFO] xml_preprocessor.py:102 - Found functions {'TIMESTAMPDIFF', 'date_add'} in block setImportantLevel
+2025-02-14 11:00:49,189 [INFO] xml_preprocessor.py:136 - Processed alert/AlertMapper.xml: 55 blocks extracted
+2025-02-14 11:00:49,193 [INFO] xml_preprocessor.py:136 - Processed alert/WorkbenchAlertUserMapper.xml: 1 blocks extracted
+2025-02-14 11:00:49,197 [INFO] xml_preprocessor.py:136 - Processed alert/WorkbenchAlertAssignMapper.xml: 1 blocks extracted
+2025-02-14 11:00:49,208 [INFO] xml_preprocessor.py:136 - Processed alert/WorkbenchDutyNoticeCountMapper.xml: 3 blocks extracted
+2025-02-14 11:00:49,212 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_ADD'} in block selectNotUpdatedRecord
+2025-02-14 11:00:49,216 [INFO] xml_preprocessor.py:136 - Processed alert/WorkbenchNoticeSendRecordMapper.xml: 2 blocks extracted
+2025-02-14 11:00:49,220 [INFO] xml_preprocessor.py:136 - Processed alert/WorkbenchAlertOperationLogMapper.xml: 1 blocks extracted
+2025-02-14 11:00:49,224 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT', 'date_add'} in block selectWillCaculate
+2025-02-14 11:00:49,231 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectWorkDayByTaskTime
+2025-02-14 11:00:49,234 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectCountByDay
+2025-02-14 11:00:49,238 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectDutysByUserId
+2025-02-14 11:00:49,241 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectDutyCountByTime
+2025-02-14 11:00:49,244 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block selectDutysByRole
+2025-02-14 11:00:49,283 [INFO] xml_preprocessor.py:102 - Found functions {'DATE_FORMAT'} in block deleteAllScheduleByExecutorId
+2025-02-14 11:00:49,287 [INFO] xml_preprocessor.py:136 - Processed alert/WorkbenchScheduleTaskMapper.xml: 19 blocks extracted
+2025-02-14 11:00:49,287 [INFO] xml_preprocessor.py:164 - Preprocessing completed
+2025-02-14 11:29:17,229 [INFO] xml_preprocessor.py:160 - Starting XML preprocessing from alert
+2025-02-14 11:29:17,234 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block insert
+2025-02-14 11:29:17,235 [INFO] xml_preprocessor.py:143 - Processed alert/WorkbenchNoticeSendBatchMapper.xml: 1 blocks extracted
+2025-02-14 11:29:17,239 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectNightAlertConfig
+2025-02-14 11:29:17,247 [INFO] xml_preprocessor.py:104 - Found functions {'IFNULL'} in block selectUnNightUnClose
+2025-02-14 11:29:17,262 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectAlertNotice
+2025-02-14 11:29:17,270 [INFO] xml_preprocessor.py:104 - Found functions {'IF'} in block selectUserByRuleId
+2025-02-14 11:29:17,277 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectFilterList
+2025-02-14 11:29:17,298 [INFO] xml_preprocessor.py:104 - Found functions {'limit'} in block selectRecurrentAlert
+2025-02-14 11:29:17,302 [INFO] xml_preprocessor.py:104 - Found functions {'IFNULL'} in block selectRepetitive
+2025-02-14 11:29:17,307 [INFO] xml_preprocessor.py:104 - Found functions {'GROUP_CONCAT'} in block selectMayEndInfos
+2025-02-14 11:29:17,311 [INFO] xml_preprocessor.py:104 - Found functions {'IFNULL', 'TIMESTAMPDIFF', 'date_format'} in block getAllAlertUsers
+2025-02-14 11:29:17,315 [INFO] xml_preprocessor.py:104 - Found functions {'IFNULL', 'GROUP_CONCAT'} in block selectNotAssignAlert
+2025-02-14 11:29:17,318 [INFO] xml_preprocessor.py:104 - Found functions {'GROUP_CONCAT'} in block selectNeedNoticeAlert
+2025-02-14 11:29:17,326 [INFO] xml_preprocessor.py:104 - Found functions {'IF', 'date_add', 'DATE_FORMAT', 'TIMESTAMPDIFF', 'GROUP_CONCAT'} in block getNoticeAlerts
+2025-02-14 11:29:17,340 [INFO] xml_preprocessor.py:104 - Found functions {'GROUP_CONCAT', 'if'} in block selectNoAssignPersonAlert
+2025-02-14 11:29:17,351 [INFO] xml_preprocessor.py:104 - Found functions {'IFNULL', 'STR_TO_DATE', 'TIMESTAMPDIFF'} in block assessmentTaskNotice
+2025-02-14 11:29:17,355 [INFO] xml_preprocessor.py:104 - Found functions {'GROUP_CONCAT'} in block selectEventAlertRepeat
+2025-02-14 11:29:17,358 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectNoticedEventAlertRepeat
+2025-02-14 11:29:17,362 [INFO] xml_preprocessor.py:104 - Found functions {'IFNULL'} in block selectUnMatchingMul
+2025-02-14 11:29:17,366 [INFO] xml_preprocessor.py:104 - Found functions {'IFNULL', 'limit'} in block getNoAlertSpace
+2025-02-14 11:29:17,378 [INFO] xml_preprocessor.py:104 - Found functions {'GROUP_CONCAT'} in block getReportAlertDetail
+2025-02-14 11:29:17,385 [INFO] xml_preprocessor.py:104 - Found functions {'IF', 'date_add', 'DATE_FORMAT', 'TIMESTAMPDIFF', 'GROUP_CONCAT'} in block getNoticeAlertsFollow
+2025-02-14 11:29:17,427 [INFO] xml_preprocessor.py:104 - Found functions {'date_add', 'TIMESTAMPDIFF'} in block setImportantLevel
+2025-02-14 11:29:17,438 [INFO] xml_preprocessor.py:143 - Processed alert/AlertMapper.xml: 55 blocks extracted
+2025-02-14 11:29:17,443 [INFO] xml_preprocessor.py:143 - Processed alert/WorkbenchAlertUserMapper.xml: 1 blocks extracted
+2025-02-14 11:29:17,447 [INFO] xml_preprocessor.py:143 - Processed alert/WorkbenchAlertAssignMapper.xml: 1 blocks extracted
+2025-02-14 11:29:17,459 [INFO] xml_preprocessor.py:143 - Processed alert/WorkbenchDutyNoticeCountMapper.xml: 3 blocks extracted
+2025-02-14 11:29:17,462 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_ADD'} in block selectNotUpdatedRecord
+2025-02-14 11:29:17,466 [INFO] xml_preprocessor.py:143 - Processed alert/WorkbenchNoticeSendRecordMapper.xml: 2 blocks extracted
+2025-02-14 11:29:17,470 [INFO] xml_preprocessor.py:143 - Processed alert/WorkbenchAlertOperationLogMapper.xml: 1 blocks extracted
+2025-02-14 11:29:17,474 [INFO] xml_preprocessor.py:104 - Found functions {'date_add', 'DATE_FORMAT'} in block selectWillCaculate
+2025-02-14 11:29:17,481 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectWorkDayByTaskTime
+2025-02-14 11:29:17,485 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectCountByDay
+2025-02-14 11:29:17,488 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectDutysByUserId
+2025-02-14 11:29:17,492 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectDutyCountByTime
+2025-02-14 11:29:17,496 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block selectDutysByRole
+2025-02-14 11:29:17,535 [INFO] xml_preprocessor.py:104 - Found functions {'DATE_FORMAT'} in block deleteAllScheduleByExecutorId
+2025-02-14 11:29:17,539 [INFO] xml_preprocessor.py:143 - Processed alert/WorkbenchScheduleTaskMapper.xml: 19 blocks extracted
+2025-02-14 11:29:17,539 [INFO] xml_preprocessor.py:171 - Preprocessing completed

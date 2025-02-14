@@ -1,0 +1,110 @@
+target_tags:
+  - select
+  - insert
+  - update
+  - delete
+priority_thresholds:
+  high: 40
+  medium: 80
+logging:
+  level: INFO
+  max_file_size: 10MB
+
+# 新增函数映射规则
+function_mappings:
+  UUID:
+    replace_with: "uuid_generate_v4() || ''"
+    type_cast: "::text"
+  IFNULL:
+    replace_with: "COALESCE"
+    args_change: []
+  GROUP_CONCAT:
+    replace_with: "string_agg"
+    args_change: ["add_separator"]
+  DATE_FORMAT:
+    replace_with: "to_char"
+    format_mapping:
+      "%Y-%m-%d %T": "YYYY-MM-DD HH24:MI:SS"
+      "%Y-%m-%d": "YYYY-MM-DD"
+  TIMESTAMPDIFF:
+    replace_pattern: "floor(extract(epoch from ({{end_time}} - {{start_time}})) / {{divisor}})"
+    unit_mapping:
+      MINUTE: 60
+      HOUR: 3600
+      DAY: 86400
+  DATE_ADD:
+    replace_with: "date_add"
+    args_order: ["unit", "value", "date"]
+  STR_TO_DATE:
+    replace_with: "to_timestamp"
+    format_mapping: {}
+  FROM_UNIXTIME:
+    replace_with: "to_timestamp"
+    args_transform:
+      - "{{arg1}} / 1000"
+    format_mapping:
+      "%Y-%m-%d %T": "YYYY-MM-DD HH24:MI:SS"
+      "%Y-%m-%d": "YYYY-MM-DD"
+  unix_timestamp:
+    replace_with: "EXTRACT(EPOCH FROM {{arg1}})"
+    args_order: ["arg1"]
+  LOCATE:
+    replace_with: "POSITION({{arg1}} IN {{arg2}})"
+    args_order: ["arg2", "arg1"]
+  IF:
+    replace_pattern: "(CASE WHEN {{condition}} THEN {{true_expr}} ELSE {{false_expr}} END)"
+    nested_level: 3
+  CAST_AS_SIGNED:
+    replace_with: "CAST({{arg1}} AS INTEGER)"
+  BETWEEN_STRING:
+    replace_pattern: |
+      {% if is_string %}
+      {{column}} IN ({{value_list}})
+      {% else %}
+      {{column}} BETWEEN {{start}} AND {{end}}
+      {% endif %}
+    type_check: "string"
+  LIMIT:
+    replace_pattern: "LIMIT {{limit}} OFFSET {{offset}}"
+    args_order: ["offset", "limit"]
+  DIV:
+    replace_with: "/"
+    type_cast: "::integer"
+  JSON_EXTRACT:
+    replace_with: "->"
+    args_transform:
+      - "{{arg2}}::jsonpath"
+  MATCH_AGAINST:
+    replace_with: "to_tsvector({{columns}}) @@ plainto_tsquery({{query}})"
+    args_mapping:
+      columns: "string_agg(column, ' ')"
+
+# 类型转换规则
+type_conversions:
+  SIGNED: "INTEGER"
+  UNSIGNED: "BIGINT"
+  DATETIME: "TIMESTAMP"
+
+# 结构转换规则
+structure_rules:
+  group_by:
+    auto_complete: true
+    remove_distinct: true
+  having:
+    use_subquery: true
+  replace_into:
+    strategy: "delete_insert"
+  on_duplicate_key:
+    conflict_columns: ["id"]
+
+# 特殊处理规则
+special_rules:
+  between_string:
+    convert_to_in: true
+  status_value:
+    stringify_columns: ["status"]
+  escape_chars:
+    preserve: ["&lt;", "&gt;", "&amp;"]
+  alias_handling:
+    add_explicit_as: true
+    reserved_keywords: ["location", "level", "group"] 

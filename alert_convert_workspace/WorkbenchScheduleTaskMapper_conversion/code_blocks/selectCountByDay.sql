@@ -1,0 +1,1 @@
+SELECT COUNT(1) FROM s_workday_unnormal WHERE workday = DATE_FORMAT(#{day},'%Y-%m-%d')

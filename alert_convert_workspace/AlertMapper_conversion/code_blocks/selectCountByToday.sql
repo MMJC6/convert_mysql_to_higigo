@@ -1,0 +1,1 @@
+select count(id) from s_workday_spot where workday = #{today, jdbcType=VARCHAR}

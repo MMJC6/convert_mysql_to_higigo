@@ -7,7 +7,7 @@
         insert into workbench_alert_operation_log (id, title, priority, dev_ip, description,remark, operation_time)
         values
         <foreach collection="list" item="item" separator=",">
-            (MD5(uuid_generate_v4() || ''), #{item.title,jdbcType=BIGINT}, #{item.priority,jdbcType=VARCHAR},
+            (MD5(UUID()), #{item.title,jdbcType=BIGINT}, #{item.priority,jdbcType=VARCHAR},
             #{item.devIp,jdbcType=CHAR}, #{item.description,jdbcType=VARCHAR}, #{item.remark,jdbcType=VARCHAR},
             now())
         </foreach>
