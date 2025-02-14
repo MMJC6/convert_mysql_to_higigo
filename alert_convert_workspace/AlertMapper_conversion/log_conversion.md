@@ -10,16 +10,17 @@
 | File | Priority | Functions | Status | Validation | Notes |
 |------|----------|-----------|---------|------------|-------|
 | getNoticeAlerts.sql | medium | GROUP_CONCAT, IF, DATE_FORMAT, TIMESTAMPDIFF, date_add | ✅ Converted | ✅ Passed | Complex nested functions handled |
+| selectNightAlertConfig.sql | high | DATE_FORMAT | ✅ Converted | ✅ Passed | Simple date format conversion |
 
 ## Validation Summary
-- Total Conversions: 1
-- Passed: 1
+- Total Conversions: 2
+- Passed: 2
 - Failed: 0
 - Pending Review: 0
 
 ## Function Conversion Statistics
 - UUID(): 0
-- DATE_FORMAT: 8
+- DATE_FORMAT: 9
 - IFNULL: 0
 - GROUP_CONCAT: 7
 - TIMESTAMPDIFF: 2
