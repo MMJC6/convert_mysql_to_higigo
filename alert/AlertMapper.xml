@@ -14,7 +14,7 @@
 	</select>
 
 	<select id="selectAlertChanged" resultType="java.lang.String">
-		SELECT `value` from tbl_sequence where sequence_name = 'alert_rule_change'
+		SELECT value FROM tbl_sequence WHERE sequence_name = 'alert_rule_change'
 	</select>
 
 	<select id="selectUnNightUnClose" resultType="com.starso.job.modules.alert.domain.WorkbenchAlertInfo">
