@@ -11,6 +11,8 @@
 |------|----------|-----------|---------|------------|-------|
 | getNoticeAlerts.sql | medium | GROUP_CONCAT, IF, DATE_FORMAT, TIMESTAMPDIFF, date_add | ✅ Converted | ✅ Passed | Complex nested functions handled |
 | selectNightAlertConfig.sql | high | DATE_FORMAT | ✅ Converted | ✅ Passed | Simple date format conversion |
+| selectAlertChanged.sql | high | None | ✅ Converted | ✅ Passed | Backtick removal only |
+| selectUnNightUnClose.sql | high | IFNULL | ✅ Converted | ✅ Passed | COALESCE conversion with default values |
 
 ## Validation Summary
 - Total Conversions: 2
